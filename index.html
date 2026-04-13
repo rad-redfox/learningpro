@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Learning Pro">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ff6b9d">
+<meta name="description" content="A fun educational app for all ages — quizzes, AI study mode, life games and more!">
+<meta property="og:title" content="Learning Pro">
+<meta property="og:description" content="Fun educational quizzes, AI tutoring, life story games & character customisation!">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Learning Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#f0e8f8;font-family:'Nunito',sans-serif}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:#fff;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.15)}
+.screen{display:none;flex:1;overflow-y:auto;overflow-x:hidden;padding:.8rem .9rem;-webkit-overflow-scrolling:touch}
+.screen.active{display:block}
+.bottom-nav{display:flex;gap:2px;background:#fef0f8;border-top:2px solid #fcd8f0;padding:5px 4px;padding-bottom:max(5px,env(safe-area-inset-bottom));flex-shrink:0}
+.nav-btn{flex:1;padding:5px 2px;border:none;background:transparent;border-radius:12px;font-family:'Fredoka One',cursive;cursor:pointer;color:#dba0cc;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px}
+.nav-btn .ni{font-size:1.25rem;line-height:1}
+.nav-btn .nl{font-size:.56rem}
+.nav-btn.active{background:#fff;color:#ff6b9d;box-shadow:0 1px 8px rgba(255,107,157,.2)}
+/* SETUP */
+.setup-wrap{text-align:center;padding:2rem 1rem 1rem}
+.setup-wrap h1{font-family:'Fredoka One',cursive;font-size:2.6rem;color:#ff6b9d;margin-bottom:.3rem}
+.setup-wrap p{font-size:.88rem;color:#aaa;margin-bottom:1.4rem}
+.grade-inp{width:130px;padding:14px;border-radius:16px;border:3px solid #f8bbd0;font-family:'Fredoka One',cursive;font-size:1.6rem;text-align:center;outline:none;color:#ad1457;background:#fff0f5;display:block;margin:.5rem auto}
+.grade-inp:focus{border-color:#ff6b9d}
+.grade-quick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:1rem 0 .4rem}
+.gqb{padding:9px 18px;border-radius:50px;border:2px solid #f8bbd0;background:#fff0f5;font-family:'Fredoka One',cursive;font-size:.82rem;cursor:pointer;color:#ad1457;transition:all .15s}
+.gqb.on,.gqb:hover{background:#ff6b9d;color:#fff;border-color:#ff6b9d}
+#gprev{font-size:.82rem;color:#888;min-height:1.4rem;font-weight:700;margin-bottom:1rem}
+.go-btn{padding:15px 44px;background:linear-gradient(135deg,#ff6b9d,#f06292);color:#fff;border:none;border-radius:50px;font-family:'Fredoka One',cursive;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,157,.45);transition:transform .12s}
+.go-btn:active{transform:scale(.96)}
+.name-inp{width:220px;padding:13px 16px;border-radius:16px;border:3px solid #f8bbd0;font-family:'Fredoka One',cursive;font-size:1.1rem;text-align:center;outline:none;color:#ad1457;background:#fff0f5;display:block;margin:.5rem auto}
+.name-inp:focus{border-color:#ff6b9d}
+.name-inp::placeholder{color:#f4b8d4;font-size:.95rem}
+.char-name-display{font-family:'Fredoka One',cursive;font-size:1rem;color:#ad1457;text-align:center;margin-bottom:.3rem;min-height:1.4rem;letter-spacing:.5px}
+.name-badge{display:inline-flex;align-items:center;background:#fff0f5;border-radius:50px;padding:3px 10px;font-family:'Fredoka One',cursive;font-size:.68rem;color:#ad1457;border:1.5px solid #f8bbd0;margin-left:3px;cursor:pointer;transition:all .15s;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.name-badge:hover{background:#ff6b9d;color:#fff;border-color:#ff6b9d}
+/* TOP BAR */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.top-bar h2{font-family:'Fredoka One',cursive;font-size:1.4rem;color:#ff6b9d}
+.wallet{display:flex;align-items:center;gap:4px;background:#fff8e1;border-radius:50px;padding:4px 12px;font-family:'Fredoka One',cursive;font-size:.88rem;color:#e65100;border:2px solid #ffe082}
+.gbadge{display:inline-flex;align-items:center;background:#fff0f5;border-radius:50px;padding:4px 10px;font-family:'Fredoka One',cursive;font-size:.7rem;color:#ad1457;cursor:pointer;border:2px solid #f8bbd0;margin-left:4px;transition:all .15s}
+.gbadge:hover{background:#ff6b9d;color:#fff;border-color:#ff6b9d}
+/* HOME */
+.hchar{display:flex;justify-content:center;margin-bottom:.8rem}
+.hchar canvas{border-radius:22px;border:3px solid #f8e0f0;box-shadow:0 4px 18px rgba(255,107,157,.15)}
+.sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sc{border-radius:16px;padding:.95rem .8rem;cursor:pointer;border:3px solid transparent;transition:transform .15s,box-shadow .15s;text-align:center;user-select:none}
+.sc:hover{transform:scale(1.03);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.sc:active{transform:scale(.97)}
+.si{font-size:1.9rem;display:block;margin-bottom:3px}
+.sn{font-family:'Fredoka One',cursive;font-size:.93rem;display:block}
+.sd{font-size:.62rem;margin-top:1px;display:block;opacity:.7}
+.s-math{background:#fff0f5;color:#ad1457}.s-spell{background:#f0f4ff;color:#283593}
+.s-sci{background:#f0fff4;color:#1b5e20}.s-hist{background:#fff8f0;color:#bf360c}
+.s-geo{background:#f0faff;color:#01579b}.s-read{background:#fdf0ff;color:#4a148c}
+.s-gram{background:#fffff0;color:#33691e}.s-logic{background:#f3e5f5;color:#6a1b9a}
+.artcard{background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:16px;padding:.95rem;cursor:pointer;border:3px solid transparent;text-align:center;transition:transform .15s;grid-column:span 2}
+.artcard:hover{transform:scale(1.01);border-color:#ce93d8}
+.artcard .sn{color:#6a1b9a}.artcard .sd{color:#9c27b0;opacity:1}
+/* QUIZ */
+.qhdr{display:flex;align-items:center;gap:8px;margin-bottom:.7rem}
+.bk{width:34px;height:34px;border-radius:50%;border:2px solid #eee;background:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.bk:hover{background:#f5f5f5}
+.qtitle{font-family:'Fredoka One',cursive;font-size:1.1rem;flex:1}
+.spill{background:#fff0f5;border-radius:50px;padding:3px 10px;font-size:.7rem;font-weight:700;color:#ad1457;border:1.5px solid #f8bbd0}
+.prog{height:9px;background:#f0f0f0;border-radius:9px;overflow:hidden;margin-bottom:.9rem}
+.progfill{height:100%;border-radius:9px;transition:width .4s}
+.qbox{border-radius:18px;padding:1.2rem;margin-bottom:.6rem;text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.qtext{font-family:'Fredoka One',cursive;font-size:1.05rem;line-height:1.45;color:#111}
+.hint{font-size:.73rem;color:#aaa;font-weight:700;text-align:center;margin-bottom:.5rem}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:.7rem}
+.opt{border-radius:13px;padding:.85rem .6rem;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;border:3px solid transparent;transition:transform .12s;text-align:center;line-height:1.3;color:#111}
+.opt:hover:not(:disabled){transform:scale(1.03)}.opt:active:not(:disabled){transform:scale(.97)}.opt:disabled{cursor:default}
+.opt.ok{background:#e8f5e9;border-color:#66bb6a;color:#1b5e20}
+.opt.bad{background:#ffebee;border-color:#ef9a9a;color:#b71c1c}
+.oa{background:#fff0f5;border-color:#f8bbd0;color:#880e4f}
+.ob{background:#f0f4ff;border-color:#c5cae9;color:#1a237e}
+.oc{background:#f0fff4;border-color:#c8e6c9;color:#1b5e20}
+.od{background:#fff8f0;border-color:#ffe0b2;color:#bf360c}
+.lo{background:#f3e5f5;border-color:#ce93d8;color:#4a148c}
+.sinp{width:100%;padding:12px;border-radius:13px;border:3px solid #e0e0e0;font-family:'Fredoka One',cursive;font-size:1.05rem;text-align:center;outline:none;background:#fafafa;color:#111;margin-bottom:.7rem}
+.sinp:focus{border-color:#7986cb}
+.sinp.ok{border-color:#66bb6a;background:#e8f5e9;color:#1b5e20}
+.sinp.bad{border-color:#ef9a9a;background:#ffebee;color:#b71c1c}
+.fbbar{border-radius:12px;padding:.75rem;text-align:center;font-family:'Fredoka One',cursive;font-size:.88rem;margin-bottom:.6rem;display:none}
+.fbbar.show{display:block}.fbbar.ok{background:#e8f5e9;color:#1b5e20}.fbbar.bad{background:#ffebee;color:#b71c1c}
+.nxt,.subbtn{display:block;width:100%;padding:12px;border-radius:13px;border:none;font-family:'Fredoka One',cursive;font-size:.98rem;cursor:pointer;color:#fff;transition:transform .12s;margin-bottom:.5rem;box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.nxt{background:#ff6b9d}.nxt:active,.subbtn:active{transform:scale(.97)}
+.subbtn:disabled{opacity:.5;cursor:default;box-shadow:none}
+/* RESULT */
+.reswrap{text-align:center;padding:1.5rem 0}
+.resstar{font-size:3.2rem;margin-bottom:.4rem;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.resttl{font-family:'Fredoka One',cursive;font-size:2rem;color:#ff6b9d;margin-bottom:.3rem}
+.ressub{font-size:.88rem;color:#888;margin-bottom:.4rem}
+.earned{font-family:'Fredoka One',cursive;font-size:1rem;color:#e65100;background:#fff8e1;border-radius:50px;display:inline-block;padding:4px 18px;margin-bottom:1.2rem;border:2px solid #ffe082}
+.rbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.rbtn{padding:11px 22px;border-radius:50px;border:none;font-family:'Fredoka One',cursive;font-size:.88rem;cursor:pointer;transition:transform .12s}
+.rbtn:active{transform:scale(.97)}
+.rbtn.p{background:#ff6b9d;color:#fff;box-shadow:0 3px 12px rgba(255,107,157,.4)}
+.rbtn.s{background:#f0f0f0;color:#555}
+/* STUDY */
+.ssgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:.8rem}
+.sscard{border-radius:16px;padding:1rem;cursor:pointer;border:3px solid transparent;transition:transform .15s,box-shadow .15s;text-align:center;user-select:none}
+.sscard:hover{transform:scale(1.03);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.sscard:active{transform:scale(.97)}
+.ssicon{font-size:2rem;display:block;margin-bottom:4px}
+.ssname{font-family:'Fredoka One',cursive;font-size:.92rem;display:block}
+.ssdesc{font-size:.63rem;opacity:.7;margin-top:2px;display:block}
+.shdr{display:flex;align-items:center;gap:8px;margin-bottom:.8rem}
+.slbl{font-family:'Fredoka One',cursive;font-size:1.05rem;flex:1}
+.tgrid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:.8rem}
+.tcard{border-radius:14px;padding:.88rem 1rem;cursor:pointer;border:2.5px solid #eee;background:#fafafa;transition:transform .12s,border-color .15s;display:flex;align-items:center;gap:12px}
+.tcard:hover{transform:scale(1.01);border-color:#ff6b9d}.tcard:active{transform:scale(.98)}
+.ticon{font-size:1.5rem;flex-shrink:0}
+.tinfo{flex:1}
+.tname{font-family:'Fredoka One',cursive;font-size:.88rem;color:#222}
+.tdesc{font-size:.67rem;color:#aaa;margin-top:2px}
+.tlvl{font-size:.6rem;border-radius:50px;padding:2px 8px;font-family:'Fredoka One',cursive;display:inline-block;margin-top:3px}
+.llhdr{display:flex;align-items:center;gap:8px;margin-bottom:.8rem}
+.tpill{border-radius:50px;padding:5px 14px;font-family:'Fredoka One',cursive;font-size:.78rem;display:inline-flex;align-items:center;gap:5px}
+.sload{text-align:center;padding:3rem 1rem}
+.sload-icon{font-size:3rem;margin-bottom:.7rem;animation:bounce 1.2s ease-in-out infinite;display:inline-block}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.sload h3{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#ff6b9d;margin-bottom:.4rem}
+.sload-bar{height:6px;background:#f0f0f0;border-radius:6px;overflow:hidden;margin:.8rem auto;max-width:260px}
+.sload-fill{height:100%;background:linear-gradient(90deg,#ff6b9d,#ce93d8);border-radius:6px;animation:lbar 2s ease-in-out infinite}
+@keyframes lbar{0%{width:0}50%{width:75%}100%{width:95%}}
+.sload-sub{font-size:.8rem;color:#bbb}
+.scontent{line-height:1.75;font-size:.87rem;color:#222}
+.scontent h2{font-family:'Fredoka One',cursive;font-size:1.12rem;color:#ff6b9d;margin:1rem 0 .4rem}
+.scontent h3{font-family:'Fredoka One',cursive;font-size:.98rem;color:#ad1457;margin:.7rem 0 .3rem}
+.scontent p{margin-bottom:.6rem}
+.scontent ul,.scontent ol{padding-left:1.3rem;margin-bottom:.6rem}
+.scontent li{margin-bottom:.3rem}
+.scontent strong{color:#333;font-weight:700}
+.scontent .fact-box{background:#fff8e1;border-left:4px solid #ffd54f;border-radius:0 12px 12px 0;padding:.65rem .9rem;margin:.6rem 0;font-size:.84rem}
+.scontent .example-box{background:#e8f5e9;border-left:4px solid #66bb6a;border-radius:0 12px 12px 0;padding:.65rem .9rem;margin:.6rem 0;font-size:.84rem}
+.scontent .warning-box{background:#fce4ec;border-left:4px solid #ef9a9a;border-radius:0 12px 12px 0;padding:.65rem .9rem;margin:.6rem 0;font-size:.84rem}
+.qasec{margin-top:1rem;border-top:2px solid #f8eef8;padding-top:.9rem}
+.qatitle{font-family:'Fredoka One',cursive;font-size:.85rem;color:#bbb;margin-bottom:.6rem}
+.qabox{display:flex;flex-direction:column;gap:8px;margin-bottom:.7rem;max-height:200px;overflow-y:auto;padding-right:2px}
+.qam{border-radius:14px;padding:.65rem .88rem;font-size:.84rem;line-height:1.55;max-width:92%}
+.qam.u{background:#fff0f5;border:2px solid #f8bbd0;color:#880e4f;align-self:flex-end;text-align:right}
+.qam.a{background:#f3e5f5;border:2px solid #e1bee7;color:#311b92;align-self:flex-start}
+.qam.t{background:#f5f5f5;border:2px dashed #ddd;color:#bbb;font-style:italic;align-self:flex-start}
+.qarow{display:flex;gap:6px}
+.qainp{flex:1;padding:10px 12px;border-radius:12px;border:2.5px solid #f8bbd0;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;background:#fff0f5;color:#111}
+.qainp:focus{border-color:#ff6b9d}
+.qasend{padding:10px 13px;background:#ff6b9d;color:#fff;border:none;border-radius:12px;font-family:'Fredoka One',cursive;font-size:.8rem;cursor:pointer;transition:background .15s;white-space:nowrap}
+.qasend:hover{background:#f06292}.qasend:disabled{background:#ddd;cursor:default}
+.sactions{display:flex;gap:6px;margin-top:.9rem;flex-wrap:wrap}
+.sab{flex:1;padding:10px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:.76rem;cursor:pointer;transition:transform .12s;min-width:80px}
+.sab:active{transform:scale(.97)}
+.sab.quiz{background:#ff6b9d;color:#fff;box-shadow:0 2px 8px rgba(255,107,157,.3)}
+.sab.diff{background:#f3e5f5;color:#4a148c}
+.sab.back{background:#f0f0f0;color:#666}
+/* LIFE */
+.lghdr{display:flex;align-items:center;gap:8px;margin-bottom:.8rem}
+.lvtag{border-radius:50px;padding:4px 13px;font-family:'Fredoka One',cursive;font-size:.73rem;display:inline-block;margin-bottom:.6rem}
+.scard{border-radius:20px;overflow:hidden;border:3px solid #f0f0f0;margin-bottom:.9rem;box-shadow:0 3px 16px rgba(0,0,0,.07)}
+.sill{width:100%;height:144px;display:block}
+.sbody{padding:.95rem}
+.sloc{font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ccc;margin-bottom:.3rem}
+.snarr{font-size:.9rem;color:#222;line-height:1.6;margin-bottom:.7rem;font-weight:600}
+.smom{background:#fffde7;border-radius:12px;padding:.6rem .85rem;font-size:.84rem;color:#5d4037;font-style:italic;margin-bottom:.8rem;line-height:1.5;border-left:4px solid #ffd54f}
+.cbtn{display:block;width:100%;margin-bottom:.45rem;padding:.8rem 1rem;border-radius:14px;border:2.5px solid #e0e0e0;background:#fff;font-family:'Nunito',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;text-align:left;color:#222;transition:border-color .15s,transform .1s;line-height:1.4}
+.cbtn:hover:not(:disabled){border-color:#ff6b9d;transform:scale(1.006)}
+.cbtn:disabled{cursor:default}
+.cbtn.good{background:#e8f5e9;border-color:#66bb6a;color:#1b5e20}
+.cbtn.bad{background:#ffebee;border-color:#ef9a9a;color:#b71c1c}
+.cbtn.neutral{background:#fff8e1;border-color:#ffd54f;color:#5d4037}
+.outbox{border-radius:14px;padding:.8rem 1rem;margin-bottom:.8rem;font-size:.84rem;line-height:1.6;color:#222;display:none}
+.outbox.show{display:block}
+.outbox.good{background:#e8f5e9;border-left:4px solid #66bb6a}
+.outbox.bad{background:#ffebee;border-left:4px solid #ef9a9a}
+.outbox.neutral{background:#fff8e1;border-left:4px solid #ffd54f}
+.outtitle{font-family:'Fredoka One',cursive;font-size:.98rem;margin-bottom:.3rem}
+.lprog{display:flex;gap:4px;margin-bottom:.8rem;justify-content:center;flex-wrap:wrap}
+.ldot{width:11px;height:11px;border-radius:50%;background:#e0e0e0;transition:background .3s,transform .3s}
+.ldot.done{background:#ff6b9d}.ldot.cur{background:#ffb3d1;transform:scale(1.35)}
+.lsrow{display:flex;gap:8px;margin-bottom:.8rem;flex-wrap:wrap}
+.lspill{border-radius:50px;padding:4px 13px;font-family:'Fredoka One',cursive;font-size:.78rem}
+.ggrid{display:grid;grid-template-columns:1fr;gap:9px}
+.gcard{border-radius:18px;padding:1rem 1.1rem;cursor:pointer;border:3px solid transparent;transition:transform .15s,box-shadow .15s;display:flex;align-items:center;gap:13px;user-select:none}
+.gcard:hover{transform:scale(1.015);box-shadow:0 4px 14px rgba(0,0,0,.08)}.gcard:active{transform:scale(.98)}
+.gicon{font-size:2.3rem;flex-shrink:0}
+.gname{font-family:'Fredoka One',cursive;font-size:1.05rem;display:block}
+.gdesc{font-size:.7rem;color:#999;margin-top:2px}
+.gtag{font-size:.63rem;font-weight:700;border-radius:50px;padding:2px 9px;display:inline-block;margin-top:4px}
+.aiload{text-align:center;padding:3rem 1rem}
+.aispin{font-size:2.6rem;margin-bottom:.8rem;animation:spin 1.5s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.aiload h3{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#ff6b9d;margin-bottom:.4rem}
+.aibar{height:6px;background:#f0f0f0;border-radius:6px;overflow:hidden;margin:.8rem auto;max-width:280px}
+.aifill{height:100%;background:#ff6b9d;border-radius:6px;animation:lbar 2s ease-in-out infinite}
+.aiload-sub{font-size:.8rem;color:#bbb}
+/* SHOP */
+.stabs{display:flex;gap:5px;margin-bottom:.8rem;flex-wrap:wrap}
+.stab{padding:7px 12px;border-radius:50px;border:2px solid #eee;background:#f9f9f9;font-family:'Fredoka One',cursive;font-size:.73rem;cursor:pointer;color:#bbb;transition:all .15s}
+.stab.on{background:#ff6b9d;border-color:#ff6b9d;color:#fff;box-shadow:0 2px 8px rgba(255,107,157,.3)}
+.sprev{display:flex;justify-content:center;margin-bottom:.9rem}
+.sprev canvas{border-radius:20px;border:3px solid #f0f0f0;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.chgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:.8rem}
+.chcard{border-radius:14px;border:2.5px solid #eee;background:#f9f9f9;cursor:pointer;padding:.5rem;text-align:center;transition:border-color .15s,transform .12s}
+.chcard:hover{transform:scale(1.04)}
+.chcard.owned{border-color:#66bb6a}.chcard.sel{border-color:#ff6b9d;background:#fff0f5}.chcard.lk{opacity:.65;cursor:default}
+.chcard canvas{display:block;width:100%;border-radius:8px}
+.chcard .cn{font-family:'Fredoka One',cursive;font-size:.65rem;color:#777;margin-top:3px;display:block}
+.chcard .cp{font-size:.58rem;color:#e65100;background:#fff8e1;border-radius:6px;padding:1px 5px;display:inline-block;margin-top:2px;font-family:'Fredoka One',cursive}
+.clgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:.8rem}
+.csw{aspect-ratio:1;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:transform .12s;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px}
+.csw:hover{transform:scale(1.06)}.csw.owned{border-color:#66bb6a}.csw.sel{border-color:#ff6b9d;transform:scale(1.08)}.csw.lk{opacity:.5;cursor:not-allowed}
+.cplbl{color:#e65100;font-size:.58rem;background:rgba(255,255,255,.85);border-radius:5px;padding:1px 4px;font-family:'Fredoka One',cursive}
+.ptgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.8rem}
+.ptcard{border-radius:14px;border:2.5px solid #eee;background:#f9f9f9;cursor:pointer;padding:.6rem;text-align:center;transition:border-color .15s,transform .12s;font-family:'Fredoka One',cursive;font-size:.7rem;color:#777}
+.ptcard:hover{transform:scale(1.03)}.ptcard.owned{border-color:#66bb6a;color:#1b5e20}.ptcard.sel{border-color:#ff6b9d;color:#ad1457;background:#fff0f5}.ptcard.lk{opacity:.6;cursor:not-allowed}
+.ptcard canvas{display:block;width:100%;border-radius:8px;margin-bottom:4px}
+.ptp{font-size:.58rem;color:#e65100;background:#fff8e1;border-radius:6px;padding:1px 5px;display:inline-block;margin-top:2px}
+.aslots{display:flex;gap:10px;margin-bottom:.9rem}
+.aslot{flex:1;border-radius:14px;border:2.5px dashed #f0a0c0;padding:.65rem;text-align:center;cursor:pointer;background:#fff8fc;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .2s}
+.aslot.on{border-color:#ff6b9d;background:#fff0f5;border-style:solid}
+.aslot-lbl{font-family:'Fredoka One',cursive;font-size:.67rem;color:#ff6b9d}
+.aslot-icon{font-size:1.7rem;line-height:1}
+.aslot-name{font-family:'Fredoka One',cursive;font-size:.62rem;color:#bbb}
+.aslot-rm{font-size:.58rem;background:#ffecf4;border:none;border-radius:7px;padding:2px 7px;font-family:'Fredoka One',cursive;color:#ad1457;cursor:pointer;margin-top:2px;transition:background .15s}
+.aslot-rm:hover{background:#ff6b9d;color:#fff}
+.slotsel{display:flex;gap:6px;margin-bottom:.6rem;align-items:center;flex-wrap:wrap}
+.slotbtn{padding:5px 13px;border-radius:50px;border:2px solid #eee;background:#fff;font-family:'Fredoka One',cursive;font-size:.68rem;cursor:pointer;color:#bbb;transition:all .15s}
+.slotbtn.on{border-color:#ff6b9d;background:#fff0f5;color:#ad1457}
+.acgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.accard{border-radius:12px;border:2.5px solid #eee;background:#f9f9f9;cursor:pointer;padding:.5rem;text-align:center;transition:border-color .15s,transform .12s;font-family:'Fredoka One',cursive;font-size:.64rem;color:#777}
+.accard:hover{transform:scale(1.04)}.accard.owned{border-color:#66bb6a;color:#1b5e20}
+.accard.s1{border-color:#ff6b9d;background:#fff0f5;color:#ad1457}
+.accard.s2{border-color:#7c4dff;background:#f3e5f5;color:#4a148c}
+.accard.lk{opacity:.55;cursor:not-allowed}
+.acicon{font-size:1.5rem;display:block;margin-bottom:2px}
+.acp{font-size:.58rem;color:#e65100;background:#fff8e1;border-radius:5px;padding:1px 5px;display:inline-block;margin-top:2px}
+.sbadge{font-size:.53rem;border-radius:5px;padding:1px 5px;display:inline-block}
+.sbadge.s1{background:#fff0f5;color:#ad1457}.sbadge.s2{background:#f3e5f5;color:#4a148c}
+/* ART */
+.atbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.7rem;align-items:center}
+.acols{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.adot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .12s;flex-shrink:0}
+.adot:hover{transform:scale(1.1)}.adot.sel{border-color:#333}
+.szwrap{display:flex;gap:3px}
+.sz{width:27px;height:27px;border-radius:50%;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.68rem;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;color:#777;transition:all .15s}
+.sz.on{background:#ff6b9d;border-color:#ff6b9d;color:#fff}
+.awrap{border-radius:16px;overflow:hidden;border:3px solid #f0f0f0;margin-bottom:.7rem;cursor:crosshair;touch-action:none}
+#ac{display:block;width:100%}
+.aacts{display:flex;gap:7px}
+.aact{flex:1;padding:9px;border-radius:12px;border:none;font-family:'Fredoka One',cursive;font-size:.83rem;cursor:pointer;transition:transform .12s}
+.aact:active{transform:scale(.97)}
+.aact.cl{background:#ffebee;color:#c62828}.aact.fl{background:#e8eaf6;color:#283593}
+/* diff badge */
+.dbadge{display:inline-block;border-radius:50px;padding:2px 9px;font-family:'Fredoka One',cursive;font-size:.67rem;margin-left:5px;vertical-align:middle}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#f8bbd0;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- SETUP -->
+<div id="tab-setup" class="screen active" style="overflow-y:auto">
+<div class="setup-wrap">
+  <div style="font-size:3.5rem;margin-bottom:.5rem">📚</div>
+  <h1>Learning Pro</h1>
+  <p>Give your character a name and enter your grade!</p>
+  <input class="name-inp" type="text" id="ninp" maxlength="16" placeholder="✏️ Name your character..." oninput="syncName(this.value)">
+  <input class="grade-inp" type="number" id="ginp" min="1" max="12" placeholder="?" oninput="syncG(this.value)">
+  <div id="gprev"></div>
+  <div class="grade-quick" id="gquick"></div>
+  <button class="go-btn" onclick="confirmG()">Let's go! 🚀</button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div id="main" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+  <!-- NAV (rendered at bottom via CSS order) -->
+  <div class="bottom-nav" style="order:999">
+    <button class="nav-btn active" onclick="showTab('home')" id="nav-home"><span class="ni">📚</span><span class="nl">Learn</span></button>
+    <button class="nav-btn" onclick="showTab('study')" id="nav-study"><span class="ni">🧠</span><span class="nl">Study</span></button>
+    <button class="nav-btn" onclick="showTab('life')" id="nav-life"><span class="ni">🌍</span><span class="nl">Life</span></button>
+    <button class="nav-btn" onclick="showTab('shop')" id="nav-shop"><span class="ni">⭐</span><span class="nl">Shop</span></button>
+    <button class="nav-btn" onclick="showTab('art')" id="nav-art"><span class="ni">🎨</span><span class="nl">Art</span></button>
+  </div>
+
+  <!-- HOME -->
+  <div id="tab-home" class="screen active">
+    <div class="top-bar">
+      <h2>Learning Pro</h2>
+      <div style="display:flex;align-items:center;gap:5px">
+        <div class="wallet">⭐ <span id="w0">0</span></div>
+        <div class="name-badge" onclick="showTab('setup')" id="namebadge">🐾</div>
+        <div class="gbadge" onclick="showTab('setup')" id="gbadge">Grade ?</div>
+      </div>
+    </div>
+    <div class="char-name-display" id="char-name-display"></div>
+    <div class="hchar"><canvas id="hchar" width="110" height="110"></canvas></div>
+    <div class="sgrid">
+      <div class="sc s-math" onclick="goQuiz('math')"><span class="si">➕</span><span class="sn">Math</span><span class="sd" id="d-math">Numbers &amp; equations</span></div>
+      <div class="sc s-spell" onclick="goQuiz('spelling')"><span class="si">🔤</span><span class="sn">Spelling</span><span class="sd" id="d-spell">Type the word</span></div>
+      <div class="sc s-sci" onclick="goQuiz('science')"><span class="si">🔬</span><span class="sn">Science</span><span class="sd" id="d-sci">How the world works</span></div>
+      <div class="sc s-hist" onclick="goQuiz('history')"><span class="si">🏛️</span><span class="sn">History</span><span class="sd" id="d-hist">People &amp; events</span></div>
+      <div class="sc s-geo" onclick="goQuiz('geography')"><span class="si">🌍</span><span class="sn">Geography</span><span class="sd" id="d-geo">Countries &amp; capitals</span></div>
+      <div class="sc s-read" onclick="goQuiz('reading')"><span class="si">📖</span><span class="sn">Reading</span><span class="sd" id="d-read">Vocab &amp; comprehension</span></div>
+      <div class="sc s-gram" onclick="goQuiz('grammar')"><span class="si">✏️</span><span class="sn">Grammar</span><span class="sd" id="d-gram">Sentences &amp; punctuation</span></div>
+      <div class="sc s-logic" onclick="goQuiz('logic')"><span class="si">🧩</span><span class="sn">Logic</span><span class="sd" id="d-logic">Puzzles &amp; reasoning</span></div>
+      <div class="artcard" onclick="showTab('art')"><span class="si">🎨</span><span class="sn">Art Break</span><span class="sd">Free drawing — relax &amp; create!</span></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="tab-quiz" class="screen">
+    <div class="qhdr">
+      <button class="bk" onclick="showTab('home')">←</button>
+      <div class="qtitle" id="qtitle"></div>
+      <div class="spill" id="spill">0/0</div>
+      <div class="wallet" style="font-size:.78rem;padding:3px 8px">⭐<span id="w1">0</span></div>
+    </div>
+    <div class="prog"><div class="progfill" id="pf" style="width:0"></div></div>
+    <div class="qbox" id="qbox"><div class="qtext" id="qtext"></div></div>
+    <div class="hint" id="hint"></div>
+    <div id="oarea"></div>
+    <div class="fbbar" id="fb"></div>
+    <button class="nxt" id="nxtbtn" style="display:none" onclick="nextQ()">Next →</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="tab-result" class="screen">
+    <div class="reswrap">
+      <div class="resstar" id="rstar">⭐</div>
+      <div class="resttl" id="rttl">Great!</div>
+      <div class="ressub">You got <span id="rscore">0</span> out of <span id="rtotal">10</span>!</div>
+      <div class="earned" id="rearned">+0 ⭐</div>
+      <div class="rbtns">
+        <button class="rbtn p" onclick="retryQ()">Try again</button>
+        <button class="rbtn s" onclick="showTab('home')">Home</button>
+        <button class="rbtn s" onclick="showTab('shop')">⭐ Shop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY -->
+  <div id="tab-study" class="screen">
+    <div id="sv-subj">
+      <div class="top-bar"><h2>🧠 Study</h2><div class="wallet">⭐<span id="w2">0</span></div></div>
+      <p style="font-size:.76rem;color:#bbb;margin-bottom:.9rem;font-weight:700">Pick a subject → topic → AI lesson + ask anything!</p>
+      <div class="ssgrid" id="ssgrid"></div>
+    </div>
+    <div id="sv-topic" style="display:none">
+      <div class="shdr">
+        <button class="bk" onclick="studyBack('subj')">←</button>
+        <div class="slbl" id="slbl">Math</div>
+        <div class="wallet" style="font-size:.78rem;padding:3px 8px">⭐<span id="w3">0</span></div>
+      </div>
+      <p style="font-size:.72rem;color:#bbb;margin-bottom:.7rem;font-weight:700">Choose a topic:</p>
+      <div class="tgrid" id="tgrid"></div>
+    </div>
+    <div id="sv-lesson" style="display:none">
+      <div class="llhdr">
+        <button class="bk" onclick="studyBack('topic')">←</button>
+        <div class="tpill" id="tpill">Topic</div>
+        <div class="wallet" style="font-size:.78rem;padding:3px 8px;margin-left:auto">⭐<span id="w4">0</span></div>
+      </div>
+      <div id="sloading" class="sload">
+        <div class="sload-icon" id="sicon">🤔</div>
+        <h3>AI tutor is thinking...</h3>
+        <div class="sload-bar"><div class="sload-fill"></div></div>
+        <div class="sload-sub" id="ssub">Preparing lesson...</div>
+      </div>
+      <div id="slessoncontent" style="display:none">
+        <div class="scontent" id="shtml"></div>
+        <div class="qasec">
+          <div class="qatitle">💬 Ask your AI tutor anything!</div>
+          <div class="qabox" id="qabox"></div>
+          <div class="qarow">
+            <input class="qainp" id="qainp" type="text" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')sendQA()">
+            <button class="qasend" id="qasend" onclick="sendQA()">Ask ✨</button>
+          </div>
+        </div>
+        <div class="sactions">
+          <button class="sab quiz" onclick="startStudyQuiz()">📝 Take quiz!</button>
+          <button class="sab diff" onclick="reloadLesson()">🔄 Explain differently</button>
+          <button class="sab back" onclick="studyBack('topic')">← Topics</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIFE -->
+  <div id="tab-life" class="screen">
+    <div id="lv-sel">
+      <div class="top-bar"><h2>🌍 Life Games</h2><div class="wallet">⭐<span id="w5">0</span></div></div>
+      <p style="font-size:.76rem;color:#bbb;margin-bottom:.9rem;font-weight:700">AI-generated stories where every choice matters!</p>
+      <div class="ggrid" id="ggrid"></div>
+    </div>
+    <div id="lv-load" style="display:none">
+      <div class="aiload">
+        <div class="aispin">✨</div>
+        <h3>Writing your story...</h3>
+        <div class="aibar"><div class="aifill"></div></div>
+        <div class="aiload-sub" id="alsub">Creating adventure...</div>
+      </div>
+    </div>
+    <div id="lv-play" style="display:none">
+      <div class="lghdr">
+        <button class="bk" onclick="exitLife()">←</button>
+        <div style="flex:1"><div class="lvtag" id="lvtag"></div></div>
+        <div class="wallet" style="font-size:.78rem;padding:3px 8px">⭐<span id="w6">0</span></div>
+      </div>
+      <div class="lsrow">
+        <div class="lspill" id="lrep" style="background:#fff0f5;color:#ad1457">❤️ Rep: 0</div>
+        <div class="lspill" style="background:#fff8e1;color:#e65100">⭐ <span id="lse">0</span> earned</div>
+      </div>
+      <div class="lprog" id="lprog"></div>
+      <div class="scard" id="scard">
+        <canvas class="sill" id="sill" width="640" height="144"></canvas>
+        <div class="sbody">
+          <div class="sloc" id="sloc"></div>
+          <div class="snarr" id="snarr"></div>
+          <div class="smom" id="smom"></div>
+          <div id="carea"></div>
+          <div class="outbox" id="outbox">
+            <div class="outtitle" id="outtitle"></div>
+            <div id="outtext"></div>
+          </div>
+        </div>
+      </div>
+      <button class="nxt" id="lnxt" style="display:none" onclick="nextScene()">Continue →</button>
+      <div id="lv-end" style="display:none">
+        <div class="reswrap">
+          <div class="resstar" id="lendstar">🌟</div>
+          <div class="resttl" id="lendttl">Story complete!</div>
+          <div class="ressub" id="lendsub"></div>
+          <div class="earned" id="lendearned"></div>
+          <div style="background:#f9f9f9;border-radius:14px;padding:.85rem;margin-bottom:1rem;font-size:.83rem;color:#555;line-height:1.6" id="lendlesson"></div>
+          <div class="rbtns">
+            <button class="rbtn p" onclick="newStory()">✨ New Story</button>
+            <button class="rbtn s" onclick="exitLife()">All stories</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div id="tab-shop" class="screen">
+    <div class="top-bar"><h2>⭐ Shop</h2><div class="wallet">⭐<span id="w7">0</span></div></div>
+    <div class="stabs">
+      <button class="stab on" onclick="shopTab('chars',this)">🐱 Chars</button>
+      <button class="stab" onclick="shopTab('colors',this)">🎨 Colors</button>
+      <button class="stab" onclick="shopTab('patterns',this)">✨ Patterns</button>
+      <button class="stab" onclick="shopTab('accs',this)">👑 Accs</button>
+    </div>
+    <div class="sprev"><canvas id="sprev" width="170" height="170"></canvas></div>
+    <div id="p-chars"><p style="font-size:.68rem;color:#bbb;margin-bottom:.6rem;font-weight:700">First 4 free! Earn ⭐ to unlock more.</p><div class="chgrid" id="chgrid"></div></div>
+    <div id="p-colors" style="display:none"><p style="font-size:.68rem;color:#bbb;margin-bottom:.6rem;font-weight:700">Change your character's colour.</p><div class="clgrid" id="clgrid"></div></div>
+    <div id="p-patterns" style="display:none"><p style="font-size:.68rem;color:#bbb;margin-bottom:.6rem;font-weight:700">Add a pattern on top.</p><div class="ptgrid" id="ptgrid"></div></div>
+    <div id="p-accs" style="display:none">
+      <p style="font-size:.68rem;color:#bbb;margin-bottom:.5rem;font-weight:700">Wear 2 accessories at once!</p>
+      <div class="aslots">
+        <div class="aslot on" id="slot1" onclick="selSlot(1)">
+          <div class="aslot-lbl">Slot 1 🩷</div>
+          <div class="aslot-icon" id="s1i">✖️</div>
+          <div class="aslot-name" id="s1n">Empty</div>
+          <button class="aslot-rm" onclick="rmSlot(1,event)">Remove</button>
+        </div>
+        <div class="aslot" id="slot2" onclick="selSlot(2)">
+          <div class="aslot-lbl" style="color:#7c4dff">Slot 2 💜</div>
+          <div class="aslot-icon" id="s2i">✖️</div>
+          <div class="aslot-name" id="s2n">Empty</div>
+          <button class="aslot-rm" style="background:#f0e6ff;color:#4a148c" onclick="rmSlot(2,event)">Remove</button>
+        </div>
+      </div>
+      <div class="slotsel">
+        <span style="font-size:.68rem;color:#bbb;font-weight:700">Equipping to:</span>
+        <button class="slotbtn on" id="sb1" onclick="selSlot(1)">🩷 Slot 1</button>
+        <button class="slotbtn" id="sb2" onclick="selSlot(2)">💜 Slot 2</button>
+      </div>
+      <div class="acgrid" id="acgrid"></div>
+    </div>
+  </div>
+
+  <!-- ART -->
+  <div id="tab-art" class="screen">
+    <div class="top-bar"><h2>🎨 Art Break</h2><div class="wallet">⭐<span id="w8">0</span></div></div>
+    <div class="atbar">
+      <div class="acols" id="acols"></div>
+      <div class="szwrap">
+        <button class="sz" onclick="setBrush(4,this)">S</button>
+        <button class="sz on" onclick="setBrush(10,this)">M</button>
+        <button class="sz" onclick="setBrush(20,this)">L</button>
+      </div>
+    </div>
+    <div class="awrap"><canvas id="ac" height="340"></canvas></div>
+    <div class="aacts">
+      <button class="aact fl" onclick="fillArt()">Fill BG</button>
+      <button class="aact cl" onclick="clearArt()">Clear</button>
+    </div>
+  </div>
+</div><!-- /main -->
+</div><!-- /app -->
+<script>
+// ══ GRADE ══════════════════════════════════════════════════════════
+var G=0,charName='';
+const GP={1:{l:'Grade 1',e:'🌱',b:'easy'},2:{l:'Grade 2',e:'🌱',b:'easy'},3:{l:'Grade 3',e:'🌿',b:'easy'},4:{l:'Grade 4',e:'🌿',b:'medium'},5:{l:'Grade 5',e:'🌿',b:'medium'},6:{l:'Grade 6',e:'📘',b:'medium'},7:{l:'Grade 7',e:'📘',b:'hard'},8:{l:'Grade 8',e:'📗',b:'hard'},9:{l:'Grade 9',e:'📗',b:'hard'},10:{l:'Grade 10',e:'🎓',b:'expert'},11:{l:'Grade 11',e:'🎓',b:'expert'},12:{l:'Grade 12',e:'🏆',b:'expert'}};
+function syncName(v){charName=v.trim();}
+function updateNameDisplay(){const n=charName||eq.animal.charAt(0).toUpperCase()+eq.animal.slice(1);const d=document.getElementById('char-name-display');if(d)d.textContent=n?`✨ ${n} ✨`:'';const nb=document.getElementById('namebadge');if(nb)nb.textContent=charName?charName.slice(0,10):'🐾';}
+function band(){const g=G||6;if(g<=3)return'easy';if(g<=6)return'medium';if(g<=9)return'hard';return'expert';}
+function dbadge(b){const c={easy:'#1b5e20',medium:'#e65100',hard:'#ad1457',expert:'#4a148c'},bg={easy:'#e8f5e9',medium:'#fff8e1',hard:'#fce4ec',expert:'#f3e5f5'};return`<span class="dbadge" style="background:${bg[b]};color:${c[b]}">${b.toUpperCase()}</span>`;}
+function syncG(v){const g=parseInt(v);if(g>=1&&g<=12){const p=GP[g];document.getElementById('gprev').innerHTML=`${p.e} ${p.l} — ${dbadge(p.b)}`;document.querySelectorAll('.gqb').forEach(b=>{const bg=parseInt(b.dataset.g);b.classList.toggle('on',g>=bg&&g<=bg+2);});}else document.getElementById('gprev').textContent='Enter 1–12';}
+function buildGQ(){const w=document.getElementById('gquick');[[1,'1–3'],[4,'4–6'],[7,'7–9'],[10,'10–12']].forEach(([g,l])=>{const b=document.createElement('button');b.className='gqb';b.textContent=l;b.dataset.g=g;b.onclick=()=>{document.getElementById('ginp').value=g;syncG(g);document.querySelectorAll('.gqb').forEach(x=>x.classList.remove('on'));b.classList.add('on');};w.appendChild(b);});}
+function confirmG(){const v=parseInt(document.getElementById('ginp').value);if(!v||v<1||v>12){document.getElementById('gprev').textContent='⚠️ Enter 1–12';return;}G=v;const ni=document.getElementById('ninp');if(ni)charName=ni.value.trim();applyG();updateNameDisplay();document.getElementById('tab-setup').classList.remove('active');const m=document.getElementById('main');m.style.display='flex';refreshChar();saveS();}
+function applyG(){const p=GP[G]||GP[6],b=document.getElementById('gbadge');if(b)b.textContent=`${p.e} ${p.l}`;const D={easy:{math:'Counting & adding',spell:'Short words',science:'Animals & nature',history:'Famous people',geo:'Countries & capitals',read:'Stories & words',gram:'Capitals & stops',logic:'Patterns & puzzles'},medium:{math:'Fractions & algebra',spell:'Tricky words',science:'Body, space & experiments',history:'Wars & inventions',geo:'Rivers & mountains',read:'Vocab & analysis',gram:'Tenses & adjectives',logic:'Sequences & deduction'},hard:{math:'Equations & geometry',spell:'Complex words',science:'Chemistry & physics',history:'Global history',geo:'Biomes & world facts',read:'Literary devices',gram:'Clauses & voice',logic:'Syllogisms & fallacies'},expert:{math:'Calculus & algebra',spell:'University words',science:'Advanced science',history:'Historical analysis',geo:'Advanced geography',read:'Literary theory',gram:'Advanced linguistics',logic:'Formal logic'}};const d=D[p.b]||D.medium;[['math','d-math'],['spell','d-spell'],['science','d-sci'],['history','d-hist'],['geography','d-geo'],['reading','d-read'],['grammar','d-gram'],['logic','d-logic']].forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.textContent=d[k.replace('geography','geo').replace('reading','read').replace('grammar','gram')];});}
+
+// ══ SAVE/LOAD ══════════════════════════════════════════════════════
+var stars=0,eq={animal:'cat',color:'#f5a623',pattern:'none',acc1:'none',acc2:'none'};
+var ownC=new Set(['cat','dog','bunny','fox']),ownCol=new Set(['orange','pink']),ownP=new Set(['none']),ownA=new Set(['none']);
+function saveS(){try{localStorage.setItem('lp2',JSON.stringify({stars,G,charName,eq,ownC:[...ownC],ownCol:[...ownCol],ownP:[...ownP],ownA:[...ownA]}));}catch(e){}}
+function loadS(){try{const d=JSON.parse(localStorage.getItem('lp2')||'{}');if(d.stars)stars=d.stars;if(d.G)G=d.G;if(d.charName)charName=d.charName;if(d.eq)Object.assign(eq,d.eq);if(d.ownC)d.ownC.forEach(x=>ownC.add(x));if(d.ownCol)d.ownCol.forEach(x=>ownCol.add(x));if(d.ownP)d.ownP.forEach(x=>ownP.add(x));if(d.ownA)d.ownA.forEach(x=>ownA.add(x));}catch(e){}}
+
+// ══ SHOP DATA ══════════════════════════════════════════════════════
+const CHARS=[{id:'cat',n:'Cat',p:0},{id:'dog',n:'Dog',p:0},{id:'bunny',n:'Bunny',p:0},{id:'fox',n:'Fox',p:0},{id:'bear',n:'Bear',p:20},{id:'panda',n:'Panda',p:25},{id:'penguin',n:'Penguin',p:25},{id:'owl',n:'Owl',p:30},{id:'tiger',n:'Tiger',p:35},{id:'lion',n:'Lion',p:35},{id:'dragon',n:'Dragon',p:50},{id:'unicorn',n:'Unicorn',p:60}];
+const COLS=[{id:'orange',h:'#f5a623',p:0,n:'Orange'},{id:'pink',h:'#f48fb1',p:0,n:'Pink'},{id:'gray',h:'#b0bec5',p:5,n:'Gray'},{id:'brown',h:'#a1887f',p:5,n:'Brown'},{id:'purple',h:'#ce93d8',p:10,n:'Purple'},{id:'blue',h:'#90caf9',p:10,n:'Blue'},{id:'green',h:'#a5d6a7',p:10,n:'Green'},{id:'yellow',h:'#fff176',p:15,n:'Yellow'},{id:'red',h:'#ef9a9a',p:15,n:'Red'},{id:'teal',h:'#80cbc4',p:20,n:'Teal'},{id:'lavender',h:'#b39ddb',p:20,n:'Lavender'},{id:'gold',h:'#ffd54f',p:30,n:'Gold'},{id:'black',h:'#424242',p:40,n:'Black'},{id:'white',h:'#f5f5f5',p:25,n:'White'},{id:'sparkle',h:'#ff80ab',p:50,n:'Sparkle'}];
+const PATS=[{id:'none',n:'Plain',p:0},{id:'spots',n:'Spots',p:10},{id:'stripes',n:'Stripes',p:12},{id:'stars',n:'Stars',p:15},{id:'hearts',n:'Hearts',p:18},{id:'zigzag',n:'Zigzag',p:20},{id:'dots',n:'Polka Dots',p:15},{id:'checks',n:'Checks',p:22},{id:'swirls',n:'Swirls',p:25}];
+const ACCS=[{id:'none',n:'None',ic:'✖️',p:0,cat:'none'},{id:'tophat',n:'Top Hat',ic:'🎩',p:8,cat:'hat'},{id:'crown',n:'Crown',ic:'👑',p:25,cat:'hat'},{id:'party',n:'Party Hat',ic:'🎉',p:10,cat:'hat'},{id:'wizard',n:'Wizard Hat',ic:'🧙',p:20,cat:'hat'},{id:'cap',n:'Baseball Cap',ic:'🧢',p:10,cat:'hat'},{id:'halo',n:'Halo',ic:'😇',p:30,cat:'hat'},{id:'glasses',n:'Glasses',ic:'👓',p:8,cat:'glasses'},{id:'sunglasses',n:'Sunglasses',ic:'🕶️',p:12,cat:'glasses'},{id:'monocle',n:'Monocle',ic:'🧐',p:22,cat:'glasses'},{id:'bow',n:'Bow',ic:'🎀',p:8,cat:'scarf'},{id:'scarf',n:'Scarf',ic:'🧣',p:12,cat:'scarf'},{id:'tie',n:'Bow Tie',ic:'🦋',p:15,cat:'scarf'},{id:'necklace',n:'Necklace',ic:'📿',p:20,cat:'scarf'},{id:'cape',n:'Cape',ic:'🦸',p:35,cat:'scarf'},{id:'wings',n:'Angel Wings',ic:'🪽',p:40,cat:'special'},{id:'rainbow',n:'Rainbow',ic:'🌈',p:50,cat:'special'}];
+
+// ══ DRAW ═══════════════════════════════════════════════════════════
+function el(c,x,y,rx,ry){c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);}
+function dk(h,a){try{let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.max(0,r*(1-a))|0},${Math.max(0,g*(1-a))|0},${Math.max(0,b*(1-a))|0})`;}catch(e){return h;}}
+function lt(h,a){try{let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.min(255,r+(255-r)*a)|0},${Math.min(255,g+(255-g)*a)|0},${Math.min(255,b+(255-b)*a)|0})`;}catch(e){return h;}}
+function dStar(c,cx,cy,r){c.beginPath();for(let i=0;i<5;i++){const a=Math.PI*2*i/5-Math.PI/2,b=a+Math.PI/5;i===0?c.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):c.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));c.lineTo(cx+r*.45*Math.cos(b),cy+r*.45*Math.sin(b));}c.closePath();c.fill();}
+function dHeart(c,cx,cy,r){c.beginPath();c.moveTo(cx,cy+r*.8);c.bezierCurveTo(cx-r*1.2,cy-r*.2,cx-r*2,cy+r*1.2,cx,cy+r*2.2);c.bezierCurveTo(cx+r*2,cy+r*1.2,cx+r*1.2,cy-r*.2,cx,cy+r*.8);c.closePath();c.fill();}
+function dPat(c,p,col,s){if(!p||p==='none')return;const pc=dk(col,.3);c.save();c.globalAlpha=.6;if(p==='spots'){c.fillStyle=pc;[[.32,.65,.05],[.6,.68,.045],[.46,.76,.04],[.54,.58,.035],[.36,.78,.035]].forEach(([x,y,r])=>{el(c,s*x,s*y,s*r,s*r);c.fill();});}else if(p==='stripes'){c.strokeStyle=pc;c.lineWidth=s*.04;for(let i=0;i<4;i++){c.beginPath();c.moveTo(s*(.38+i*.07),s*.55);c.lineTo(s*(.34+i*.07),s*.92);c.stroke();}}else if(p==='stars'){c.fillStyle=pc;[[.34,.66,.04],[.62,.64,.035],[.5,.77,.04],[.42,.58,.03]].forEach(([x,y,r])=>dStar(c,s*x,s*y,s*r));}else if(p==='hearts'){c.fillStyle=pc;[[.34,.66,.04],[.62,.63,.035],[.5,.77,.04]].forEach(([x,y,r])=>dHeart(c,s*x,s*y,s*r));}else if(p==='zigzag'){c.strokeStyle=pc;c.lineWidth=s*.025;c.lineCap='round';c.lineJoin='round';for(let row=0;row<3;row++){c.beginPath();for(let i=0;i<7;i++){const x=s*(.3+i*.07),y=s*(.58+row*.11)+(i%2===0?0:s*.05);i===0?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();}}else if(p==='dots'){c.fillStyle=pc;for(let r=0;r<3;r++)for(let cc=0;cc<4;cc++){el(c,s*(.35+cc*.1),s*(.6+r*.1),s*.025,s*.025);c.fill();}}else if(p==='checks'){c.fillStyle=pc;for(let r=0;r<4;r++)for(let cc=0;cc<4;cc++){if((r+cc)%2===0)c.fillRect(s*(.32+cc*.1),s*(.55+r*.1),s*.085,s*.085);}}else if(p==='swirls'){c.strokeStyle=pc;c.lineWidth=s*.02;[[.38,.68],[.6,.65],[.5,.78]].forEach(([cx,cy])=>{c.beginPath();c.arc(s*cx,s*cy,s*.04,0,Math.PI*1.5);c.stroke();c.beginPath();c.arc(s*cx,s*cy,s*.025,0,Math.PI*1.5);c.stroke();});}c.restore();}
+function dAcc(c,id,s){if(!id||id==='none')return;const a=ACCS.find(x=>x.id===id);if(!a)return;const pos={hat:{x:s*.5,y:s*.08},glasses:{x:s*.5,y:s*.38},scarf:{x:s*.5,y:s*.62},special:{x:s*.5,y:s*.06},none:{x:s*.5,y:s*.5}}[a.cat]||{x:s*.5,y:s*.5};c.font=`${s*.22}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(a.ic,pos.x,pos.y);}
+function dFull(c,s,an,col,pat,a1,a2){dAnimal(c,an||eq.animal,col||eq.color,s);dPat(c,pat!==undefined?pat:eq.pattern,col||eq.color,s);dAcc(c,a1!==undefined?a1:eq.acc1,s);dAcc(c,a2!==undefined?a2:eq.acc2,s);}
+function refreshChar(){const cv=document.getElementById('hchar');if(cv)dFull(cv.getContext('2d'),110);updateNameDisplay();}
+function renderPrev(){const cv=document.getElementById('sprev');if(cv)dFull(cv.getContext('2d'),170);}
+
+function dAnimal(c,an,col,s){
+  c.clearRect(0,0,s,s);
+  const cl=col||'#f5a623',d=dk(cl,.25),li=lt(cl,.3),d2=dk(cl,.45);
+  if(an==='cat'){c.fillStyle=cl;c.beginPath();c.moveTo(s*.22,s*.28);c.lineTo(s*.1,s*.05);c.lineTo(s*.38,s*.22);c.closePath();c.fill();c.beginPath();c.moveTo(s*.78,s*.28);c.lineTo(s*.9,s*.05);c.lineTo(s*.62,s*.22);c.closePath();c.fill();c.fillStyle=li;c.beginPath();c.moveTo(s*.24,s*.26);c.lineTo(s*.15,s*.1);c.lineTo(s*.35,s*.23);c.closePath();c.fill();c.beginPath();c.moveTo(s*.76,s*.26);c.lineTo(s*.85,s*.1);c.lineTo(s*.65,s*.23);c.closePath();c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.22);c.fill();el(c,s*.5,s*.42,s*.3,s*.28);c.fill();c.fillStyle=li;el(c,s*.5,s*.75,s*.16,s*.14);c.fill();c.fillStyle='#fff';el(c,s*.5,s*.47,s*.18,s*.13);c.fill();c.fillStyle='#222';el(c,s*.38,s*.4,s*.05,s*.06);c.fill();el(c,s*.62,s*.4,s*.05,s*.06);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.36,s*.38,s*.02,s*.02);c.fill();el(c,s*.6,s*.38,s*.02,s*.02);c.fill();c.fillStyle='#e91e63';c.beginPath();c.moveTo(s*.5,s*.49);c.lineTo(s*.47,s*.46);c.lineTo(s*.53,s*.46);c.closePath();c.fill();c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=1;[[s*.3,s*.48,s*.46,s*.49],[s*.3,s*.51,s*.46,s*.51],[s*.7,s*.48,s*.54,s*.49],[s*.7,s*.51,s*.54,s*.51]].forEach(([x1,y1,x2,y2])=>{c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();});c.strokeStyle=cl;c.lineWidth=s*.07;c.lineCap='round';c.beginPath();c.moveTo(s*.78,s*.82);c.quadraticCurveTo(s*.95,s*.65,s*.82,s*.55);c.stroke();c.fillStyle=d;el(c,s*.36,s*.9,s*.07,s*.05);c.fill();el(c,s*.64,s*.9,s*.07,s*.05);c.fill();}
+  else if(an==='dog'){c.fillStyle=d;el(c,s*.25,s*.4,s*.1,s*.18);c.fill();el(c,s*.75,s*.4,s*.1,s*.18);c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.22);c.fill();el(c,s*.5,s*.4,s*.3,s*.27);c.fill();c.fillStyle=li;el(c,s*.5,s*.47,s*.16,s*.12);c.fill();c.fillStyle='#222';el(c,s*.38,s*.38,s*.055,s*.065);c.fill();el(c,s*.62,s*.38,s*.055,s*.065);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.36,s*.36,s*.02,s*.02);c.fill();el(c,s*.6,s*.36,s*.02,s*.02);c.fill();c.fillStyle='#222';el(c,s*.5,s*.46,s*.06,s*.045);c.fill();c.fillStyle='#e91e63';el(c,s*.5,s*.54,s*.05,s*.04);c.fill();c.strokeStyle=d;c.lineWidth=s*.065;c.lineCap='round';c.beginPath();c.moveTo(s*.78,s*.78);c.quadraticCurveTo(s*.92,s*.58,s*.8,s*.5);c.stroke();c.fillStyle=d;el(c,s*.36,s*.9,s*.07,s*.05);c.fill();el(c,s*.64,s*.9,s*.07,s*.05);c.fill();}
+  else if(an==='bunny'){c.fillStyle=cl;el(c,s*.36,s*.18,s*.08,s*.2);c.fill();el(c,s*.64,s*.18,s*.08,s*.2);c.fill();c.fillStyle=li;el(c,s*.36,s*.18,s*.04,s*.15);c.fill();el(c,s*.64,s*.18,s*.04,s*.15);c.fill();c.fillStyle=cl;el(c,s*.5,s*.73,s*.3,s*.24);c.fill();el(c,s*.5,s*.44,s*.28,s*.26);c.fill();c.fillStyle='#fff';el(c,s*.5,s*.76,s*.18,s*.16);c.fill();el(c,s*.5,s*.48,s*.16,s*.12);c.fill();c.fillStyle='#222';el(c,s*.38,s*.42,s*.05,s*.055);c.fill();el(c,s*.62,s*.42,s*.05,s*.055);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.36,s*.4,s*.02,s*.02);c.fill();el(c,s*.6,s*.4,s*.02,s*.02);c.fill();c.fillStyle='#e91e63';el(c,s*.5,s*.49,s*.03,s*.025);c.fill();c.fillStyle='#fff';el(c,s*.78,s*.82,s*.07,s*.06);c.fill();c.fillStyle=cl;el(c,s*.34,s*.92,s*.1,s*.06);c.fill();el(c,s*.66,s*.92,s*.1,s*.06);c.fill();}
+  else if(an==='fox'){c.fillStyle=cl;c.beginPath();c.moveTo(s*.28,s*.28);c.lineTo(s*.16,s*.05);c.lineTo(s*.4,s*.22);c.closePath();c.fill();c.beginPath();c.moveTo(s*.72,s*.28);c.lineTo(s*.84,s*.05);c.lineTo(s*.6,s*.22);c.closePath();c.fill();c.fillStyle='#222';c.beginPath();c.moveTo(s*.29,s*.27);c.lineTo(s*.2,s*.1);c.lineTo(s*.38,s*.23);c.closePath();c.fill();c.beginPath();c.moveTo(s*.71,s*.27);c.lineTo(s*.8,s*.1);c.lineTo(s*.62,s*.23);c.closePath();c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.22);c.fill();el(c,s*.5,s*.41,s*.3,s*.27);c.fill();c.fillStyle='#f5f5f5';el(c,s*.5,s*.45,s*.2,s*.15);c.fill();el(c,s*.5,s*.5,s*.14,s*.1);c.fill();c.fillStyle='#222';el(c,s*.37,s*.38,s*.055,s*.065);c.fill();el(c,s*.63,s*.38,s*.055,s*.065);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.35,s*.36,s*.02,s*.02);c.fill();el(c,s*.61,s*.36,s*.02,s*.02);c.fill();c.fillStyle='#222';el(c,s*.5,s*.48,s*.05,s*.038);c.fill();c.strokeStyle=cl;c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.78,s*.82);c.quadraticCurveTo(s*.98,s*.62,s*.84,s*.5);c.stroke();c.strokeStyle='#f5f5f5';c.lineWidth=s*.04;c.beginPath();c.moveTo(s*.78,s*.82);c.quadraticCurveTo(s*.98,s*.62,s*.84,s*.5);c.stroke();c.fillStyle=d;el(c,s*.36,s*.9,s*.07,s*.05);c.fill();el(c,s*.64,s*.9,s*.07,s*.05);c.fill();}
+  else if(an==='bear'){c.fillStyle=d;el(c,s*.22,s*.15,s*.1,s*.1);c.fill();el(c,s*.78,s*.15,s*.1,s*.1);c.fill();c.fillStyle=li;el(c,s*.22,s*.15,s*.06,s*.06);c.fill();el(c,s*.78,s*.15,s*.06,s*.06);c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.3,s*.24);c.fill();el(c,s*.5,s*.42,s*.32,s*.3);c.fill();c.fillStyle=li;el(c,s*.5,s*.52,s*.18,s*.14);c.fill();c.fillStyle='#222';el(c,s*.38,s*.38,s*.06,s*.065);c.fill();el(c,s*.62,s*.38,s*.06,s*.065);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.36,s*.36,s*.02,s*.02);c.fill();el(c,s*.6,s*.36,s*.02,s*.02);c.fill();c.fillStyle='#333';el(c,s*.5,s*.5,s*.05,s*.04);c.fill();c.strokeStyle='#333';c.lineWidth=s*.02;c.lineCap='round';c.beginPath();c.arc(s*.5,s*.52,s*.07,Math.PI*.1,Math.PI*.9);c.stroke();c.fillStyle=d;el(c,s*.3,s*.9,s*.1,s*.07);c.fill();el(c,s*.7,s*.9,s*.1,s*.07);c.fill();}
+  else if(an==='panda'){c.fillStyle='#f0f0f0';el(c,s*.5,s*.72,s*.3,s*.24);c.fill();el(c,s*.5,s*.42,s*.32,s*.3);c.fill();c.fillStyle='#222';el(c,s*.22,s*.15,s*.1,s*.1);c.fill();el(c,s*.78,s*.15,s*.1,s*.1);c.fill();el(c,s*.34,s*.38,s*.1,s*.1);c.fill();el(c,s*.66,s*.38,s*.1,s*.1);c.fill();c.fillStyle='#fff';el(c,s*.36,s*.37,s*.055,s*.065);c.fill();el(c,s*.64,s*.37,s*.055,s*.065);c.fill();c.fillStyle='#111';el(c,s*.37,s*.38,s*.03,s*.04);c.fill();el(c,s*.65,s*.38,s*.03,s*.04);c.fill();c.fillStyle='rgba(255,255,255,.8)';el(c,s*.35,s*.36,s*.015,s*.015);c.fill();el(c,s*.63,s*.36,s*.015,s*.015);c.fill();c.fillStyle='#f0f0f0';el(c,s*.5,s*.52,s*.17,s*.13);c.fill();c.fillStyle='#333';el(c,s*.5,s*.5,s*.04,s*.035);c.fill();c.strokeStyle='#333';c.lineWidth=s*.018;c.lineCap='round';c.beginPath();c.arc(s*.5,s*.52,s*.065,Math.PI*.1,Math.PI*.9);c.stroke();c.fillStyle='#222';el(c,s*.28,s*.9,s*.1,s*.07);c.fill();el(c,s*.72,s*.9,s*.1,s*.07);c.fill();}
+  else if(an==='penguin'){c.fillStyle='#fff';el(c,s*.5,s*.7,s*.22,s*.28);c.fill();c.fillStyle=cl||'#333';el(c,s*.5,s*.72,s*.3,s*.26);c.fill();el(c,s*.5,s*.38,s*.28,s*.28);c.fill();c.fillStyle='#fff';el(c,s*.5,s*.4,s*.18,s*.2);c.fill();c.fillStyle='#222';el(c,s*.4,s*.34,s*.05,s*.055);c.fill();el(c,s*.6,s*.34,s*.05,s*.055);c.fill();c.fillStyle='rgba(255,255,255,.8)';el(c,s*.38,s*.32,s*.02,s*.02);c.fill();el(c,s*.58,s*.32,s*.02,s*.02);c.fill();c.fillStyle='#ff9800';c.beginPath();c.moveTo(s*.5,s*.47);c.lineTo(s*.44,s*.44);c.lineTo(s*.56,s*.44);c.closePath();c.fill();el(c,s*.37,s*.93,s*.08,s*.04);c.fill();el(c,s*.63,s*.93,s*.08,s*.04);c.fill();c.fillStyle=cl||'#333';c.beginPath();c.ellipse(s*.22,s*.65,s*.07,s*.18,-.3,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(s*.78,s*.65,s*.07,s*.18,.3,0,Math.PI*2);c.fill();}
+  else if(an==='owl'){c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.25);c.fill();el(c,s*.5,s*.38,s*.3,s*.3);c.fill();c.fillStyle=d;[[s*.32,s*.12,s*.28,-.01,s*.4,s*.16],[s*.68,s*.12,s*.72,-.01,s*.6,s*.16]].forEach(([ax,ay,bx,by,cx2,cy])=>{c.beginPath();c.moveTo(s*ax,s*ay);c.lineTo(s*bx,s*by);c.lineTo(s*cx2,s*cy);c.closePath();c.fill();});c.fillStyle=li;el(c,s*.5,s*.4,s*.24,s*.24);c.fill();c.fillStyle='#fff';el(c,s*.37,s*.36,s*.1,s*.1);c.fill();el(c,s*.63,s*.36,s*.1,s*.1);c.fill();c.fillStyle='#ff9800';el(c,s*.37,s*.36,s*.07,s*.07);c.fill();el(c,s*.63,s*.36,s*.07,s*.07);c.fill();c.fillStyle='#111';el(c,s*.37,s*.36,s*.04,s*.04);c.fill();el(c,s*.63,s*.36,s*.04,s*.04);c.fill();c.fillStyle='rgba(255,255,255,.9)';el(c,s*.35,s*.34,s*.015,s*.015);c.fill();el(c,s*.61,s*.34,s*.015,s*.015);c.fill();c.fillStyle='#ff9800';c.beginPath();c.moveTo(s*.5,s*.47);c.lineTo(s*.44,s*.44);c.lineTo(s*.56,s*.44);c.closePath();c.fill();c.fillStyle=li;el(c,s*.5,s*.76,s*.16,s*.14);c.fill();c.fillStyle=d;el(c,s*.36,s*.92,s*.08,s*.05);c.fill();el(c,s*.64,s*.92,s*.08,s*.05);c.fill();}
+  else if(an==='tiger'){c.fillStyle=cl;c.beginPath();c.moveTo(s*.2,s*.25);c.lineTo(s*.1,s*.06);c.lineTo(s*.34,s*.2);c.closePath();c.fill();c.beginPath();c.moveTo(s*.8,s*.25);c.lineTo(s*.9,s*.06);c.lineTo(s*.66,s*.2);c.closePath();c.fill();c.fillStyle=li;c.beginPath();c.moveTo(s*.22,s*.24);c.lineTo(s*.14,s*.1);c.lineTo(s*.32,s*.21);c.closePath();c.fill();c.beginPath();c.moveTo(s*.78,s*.24);c.lineTo(s*.86,s*.1);c.lineTo(s*.68,s*.21);c.closePath();c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.3,s*.24);c.fill();el(c,s*.5,s*.41,s*.32,s*.29);c.fill();c.fillStyle='#fff8f0';el(c,s*.5,s*.5,s*.2,s*.15);c.fill();c.fillStyle='#222';el(c,s*.36,s*.37,s*.06,s*.07);c.fill();el(c,s*.64,s*.37,s*.06,s*.07);c.fill();c.fillStyle='#4CAF50';el(c,s*.36,s*.37,s*.04,s*.05);c.fill();el(c,s*.64,s*.37,s*.04,s*.05);c.fill();c.fillStyle='#111';el(c,s*.36,s*.38,s*.02,s*.03);c.fill();el(c,s*.64,s*.38,s*.02,s*.03);c.fill();c.fillStyle='rgba(255,255,255,.8)';el(c,s*.34,s*.35,s*.015,s*.015);c.fill();el(c,s*.62,s*.35,s*.015,s*.015);c.fill();c.fillStyle='#333';el(c,s*.5,s*.49,s*.04,s*.035);c.fill();c.strokeStyle='#333';c.lineWidth=s*.018;c.lineCap='round';c.beginPath();c.arc(s*.5,s*.51,s*.07,Math.PI*.1,Math.PI*.9);c.stroke();c.strokeStyle=d2;c.lineWidth=s*.03;c.lineCap='round';[[s*.3,s*.25,s*.2,s*.18],[s*.7,s*.25,s*.8,s*.18],[s*.35,s*.32,s*.28,s*.3],[s*.65,s*.32,s*.72,s*.3],[s*.5,s*.2,s*.5,s*.13]].forEach(([x1,y1,x2,y2])=>{c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();});c.strokeStyle=cl;c.lineWidth=s*.08;c.beginPath();c.moveTo(s*.8,s*.82);c.quadraticCurveTo(s*.96,s*.65,s*.84,s*.55);c.stroke();c.fillStyle=d;el(c,s*.34,s*.9,s*.08,s*.06);c.fill();el(c,s*.66,s*.9,s*.08,s*.06);c.fill();}
+  else if(an==='lion'){c.fillStyle=d;el(c,s*.5,s*.44,s*.38,s*.38);c.fill();c.fillStyle=dk(cl,.1);el(c,s*.5,s*.44,s*.32,s*.32);c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.24);c.fill();c.fillStyle=li;el(c,s*.5,s*.41,s*.26,s*.26);c.fill();c.fillStyle='#fff8e0';el(c,s*.5,s*.5,s*.17,s*.14);c.fill();c.fillStyle='#222';el(c,s*.37,s*.37,s*.055,s*.065);c.fill();el(c,s*.63,s*.37,s*.055,s*.065);c.fill();c.fillStyle='#ff9800';el(c,s*.37,s*.37,s*.035,s*.045);c.fill();el(c,s*.63,s*.37,s*.035,s*.045);c.fill();c.fillStyle='#111';el(c,s*.37,s*.38,s*.02,s*.025);c.fill();el(c,s*.63,s*.38,s*.02,s*.025);c.fill();c.fillStyle='rgba(255,255,255,.8)';el(c,s*.35,s*.36,s*.013,s*.013);c.fill();el(c,s*.61,s*.36,s*.013,s*.013);c.fill();c.fillStyle='#a05020';el(c,s*.5,s*.48,s*.05,s*.04);c.fill();c.strokeStyle='#a05020';c.lineWidth=s*.02;c.lineCap='round';c.beginPath();c.arc(s*.5,s*.51,s*.07,Math.PI*.1,Math.PI*.9);c.stroke();c.strokeStyle=cl;c.lineWidth=s*.07;c.lineCap='round';c.beginPath();c.moveTo(s*.8,s*.82);c.quadraticCurveTo(s*.98,s*.6,s*.85,s*.52);c.stroke();c.fillStyle=d;el(c,s*.85,s*.5,s*.06,s*.08);c.fill();el(c,s*.34,s*.9,s*.08,s*.06);c.fill();el(c,s*.66,s*.9,s*.08,s*.06);c.fill();}
+  else if(an==='dragon'){c.fillStyle=dk(cl,.15);c.beginPath();c.moveTo(s*.15,s*.5);c.bezierCurveTo(s*-.1,s*.2,s*.2,s*.05,s*.35,s*.3);c.closePath();c.fill();c.beginPath();c.moveTo(s*.85,s*.5);c.bezierCurveTo(s*1.1,s*.2,s*.8,s*.05,s*.65,s*.3);c.closePath();c.fill();c.fillStyle=lt(cl,.15);c.beginPath();c.moveTo(s*.18,s*.48);c.bezierCurveTo(0,s*.25,s*.18,s*.12,s*.34,s*.32);c.closePath();c.fill();c.beginPath();c.moveTo(s*.82,s*.48);c.bezierCurveTo(s*1.0,s*.25,s*.82,s*.12,s*.66,s*.32);c.closePath();c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.28,s*.24);c.fill();el(c,s*.5,s*.4,s*.3,s*.28);c.fill();c.fillStyle=dk(cl,.1);el(c,s*.5,s*.52,s*.2,s*.12);c.fill();c.fillStyle='#222';el(c,s*.36,s*.37,s*.07,s*.075);c.fill();el(c,s*.64,s*.37,s*.07,s*.075);c.fill();c.fillStyle='#ff6f00';el(c,s*.36,s*.37,s*.05,s*.055);c.fill();el(c,s*.64,s*.37,s*.05,s*.055);c.fill();c.fillStyle='rgba(255,255,255,.7)';el(c,s*.34,s*.35,s*.013,s*.013);c.fill();el(c,s*.62,s*.35,s*.013,s*.013);c.fill();c.fillStyle=dk(cl,.3);c.beginPath();c.moveTo(s*.36,s*.14);c.lineTo(s*.32,s*-.01);c.lineTo(s*.42,s*.18);c.closePath();c.fill();c.beginPath();c.moveTo(s*.64,s*.14);c.lineTo(s*.68,s*-.01);c.lineTo(s*.58,s*.18);c.closePath();c.fill();c.fillStyle=li;el(c,s*.5,s*.75,s*.15,s*.13);c.fill();c.strokeStyle=cl;c.lineWidth=s*.08;c.lineCap='round';c.beginPath();c.moveTo(s*.8,s*.82);c.quadraticCurveTo(s*.98,s*.58,s*.88,s*.45);c.stroke();c.fillStyle=d;el(c,s*.34,s*.9,s*.08,s*.06);c.fill();el(c,s*.66,s*.9,s*.08,s*.06);c.fill();c.fillStyle='rgba(255,150,0,.7)';c.beginPath();c.moveTo(s*.62,s*.52);c.bezierCurveTo(s*.75,s*.48,s*.85,s*.58,s*.78,s*.54);c.bezierCurveTo(s*.88,s*.46,s*.95,s*.52,s*.9,s*.5);c.closePath();c.fill();}
+  else if(an==='unicorn'){c.fillStyle=cl;c.beginPath();c.moveTo(s*.27,s*.22);c.lineTo(s*.22,s*.06);c.lineTo(s*.36,s*.2);c.closePath();c.fill();c.beginPath();c.moveTo(s*.73,s*.22);c.lineTo(s*.78,s*.06);c.lineTo(s*.64,s*.2);c.closePath();c.fill();c.fillStyle='#ff80ab';c.beginPath();c.moveTo(s*.28,s*.21);c.lineTo(s*.24,s*.1);c.lineTo(s*.35,s*.21);c.closePath();c.fill();c.beginPath();c.moveTo(s*.72,s*.21);c.lineTo(s*.76,s*.1);c.lineTo(s*.65,s*.21);c.closePath();c.fill();c.fillStyle=cl;el(c,s*.5,s*.72,s*.3,s*.25);c.fill();el(c,s*.5,s*.42,s*.32,s*.3);c.fill();c.fillStyle=li;el(c,s*.5,s*.52,s*.19,s*.14);c.fill();['#ff6b6b','#ffa500','#ffff00','#6bff6b','#6b9eff','#c96bff'].forEach((mc,i)=>{c.fillStyle=mc;c.beginPath();c.ellipse(s*(.32+i*.035),s*.18,s*.04,s*.12,-0.4,0,Math.PI*2);c.fill();});c.fillStyle='#222';el(c,s*.37,s*.37,s*.06,s*.07);c.fill();el(c,s*.63,s*.37,s*.06,s*.07);c.fill();c.fillStyle='#7c4dff';el(c,s*.37,s*.37,s*.04,s*.05);c.fill();el(c,s*.63,s*.37,s*.04,s*.05);c.fill();c.fillStyle='#111';el(c,s*.37,s*.38,s*.022,s*.028);c.fill();el(c,s*.63,s*.38,s*.022,s*.028);c.fill();c.fillStyle='rgba(255,255,255,.9)';el(c,s*.35,s*.35,s*.013,s*.013);c.fill();el(c,s*.61,s*.35,s*.013,s*.013);c.fill();c.fillStyle='#ff80ab';el(c,s*.5,s*.5,s*.04,s*.035);c.fill();c.strokeStyle='#e91e63';c.lineWidth=s*.02;c.lineCap='round';c.beginPath();c.arc(s*.5,s*.52,s*.065,Math.PI*.15,Math.PI*.85);c.stroke();['#ff0000','#ff9900','#ffff00','#00cc00','#0000ff','#9900ff'].forEach((hc,i)=>{c.fillStyle=hc;c.beginPath();c.moveTo(s*.5,s*-.02);c.lineTo(s*(.44+i*.02),s*.14);c.lineTo(s*(.46+i*.02),s*.14);c.closePath();c.fill();});['#ff6b6b','#ffa500','#ffff00','#6bff6b','#6b9eff','#c96bff'].forEach((mc,i)=>{c.strokeStyle=mc;c.lineWidth=s*.025;c.lineCap='round';c.beginPath();c.moveTo(s*(.78+i*.01),s*.8);c.quadraticCurveTo(s*(.96+i*.01),s*(.6-i*.02),s*(.84+i*.01),s*(.5-i*.01));c.stroke();});c.fillStyle='#ff80ab';el(c,s*.34,s*.9,s*.08,s*.06);c.fill();el(c,s*.66,s*.9,s*.08,s*.06);c.fill();}
+}
+
+// ══ SHOP RENDER ════════════════════════════════════════════════════
+var curShopTab='chars',curSlot=1;
+function shopTab(t,btn){curShopTab=t;document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');['chars','colors','patterns','accs'].forEach(p=>{document.getElementById('p-'+p).style.display=p===t?'block':'none';});renderShop();}
+function renderShop(){wallets();renderPrev();if(curShopTab==='chars')renderChars();else if(curShopTab==='colors')renderCols();else if(curShopTab==='patterns')renderPats();else renderAccs();}
+function renderChars(){const g=document.getElementById('chgrid');g.innerHTML='';CHARS.forEach(ch=>{const owned=ownC.has(ch.id),sel=eq.animal===ch.id,can=stars>=ch.p;const card=document.createElement('div');card.className='chcard'+(sel?' sel':owned?' owned':!can?' lk':'');const t=document.createElement('canvas');t.width=58;t.height=58;dAnimal(t.getContext('2d'),ch.id,eq.color,58);card.appendChild(t);const n=document.createElement('span');n.className='cn';n.textContent=ch.n;card.appendChild(n);if(!owned){const p=document.createElement('span');p.className='cp';p.textContent='⭐'+ch.p;card.appendChild(p);}card.onclick=()=>{if(owned){eq.animal=ch.id;refreshChar();renderShop();saveS();}else if(can){stars-=ch.p;ownC.add(ch.id);eq.animal=ch.id;refreshChar();renderShop();wallets();saveS();}};g.appendChild(card);});}
+function renderCols(){const g=document.getElementById('clgrid');g.innerHTML='';COLS.forEach(col=>{const owned=ownCol.has(col.id),sel=eq.color===col.h,can=stars>=col.p;const d=document.createElement('div');d.className='csw'+(owned?' owned':'')+(sel?' sel':'')+((!owned&&!can)?' lk':'');d.style.background=col.h;d.style.borderColor=sel?'#ff6b9d':owned?'#66bb6a':'#ddd';d.title=col.n+(owned?'':' — ⭐'+col.p);if(!owned){const p=document.createElement('div');p.className='cplbl';p.textContent='⭐'+col.p;d.appendChild(p);}d.onclick=()=>{if(owned){eq.color=col.h;refreshChar();renderShop();saveS();}else if(can){stars-=col.p;ownCol.add(col.id);eq.color=col.h;refreshChar();renderShop();wallets();saveS();}};g.appendChild(d);});}
+function renderPats(){const g=document.getElementById('ptgrid');g.innerHTML='';PATS.forEach(pt=>{const owned=ownP.has(pt.id),sel=eq.pattern===pt.id,can=stars>=pt.p;const card=document.createElement('div');card.className='ptcard'+(owned?' owned':'')+(sel?' sel':'')+((!owned&&!can)?' lk':'');const pc=document.createElement('canvas');pc.style.height='58px';pc.width=90;pc.height=58;const tmp=document.createElement('canvas');tmp.width=90;tmp.height=90;dFull(tmp.getContext('2d'),90,eq.animal,eq.color,pt.id,'none','none');pc.getContext('2d').drawImage(tmp,0,-18,90,90);card.appendChild(pc);const n=document.createElement('div');n.textContent=pt.n;card.appendChild(n);if(!owned&&pt.p>0){const p=document.createElement('div');p.className='ptp';p.textContent='⭐'+pt.p;card.appendChild(p);}card.onclick=()=>{if(owned){eq.pattern=pt.id;refreshChar();renderShop();saveS();}else if(can){stars-=pt.p;ownP.add(pt.id);eq.pattern=pt.id;refreshChar();renderShop();wallets();saveS();}};g.appendChild(card);});}
+function selSlot(n){curSlot=n;document.getElementById('slot1').classList.toggle('on',n===1);document.getElementById('slot2').classList.toggle('on',n===2);document.getElementById('sb1').classList.toggle('on',n===1);document.getElementById('sb2').classList.toggle('on',n===2);renderAccs();}
+function rmSlot(n,e){e.stopPropagation();if(n===1)eq.acc1='none';else eq.acc2='none';refreshChar();renderPrev();updSlots();renderAccs();saveS();}
+function updSlots(){const a1=ACCS.find(a=>a.id===eq.acc1)||{ic:'✖️',id:'none'};const a2=ACCS.find(a=>a.id===eq.acc2)||{ic:'✖️',id:'none'};document.getElementById('s1i').textContent=a1.ic;document.getElementById('s1n').textContent=a1.id==='none'?'Empty':ACCS.find(a=>a.id===eq.acc1)?.n||'Empty';document.getElementById('s2i').textContent=a2.ic;document.getElementById('s2n').textContent=a2.id==='none'?'Empty':ACCS.find(a=>a.id===eq.acc2)?.n||'Empty';}
+function equipAcc(id){if(curSlot===1){eq.acc1=eq.acc1===id?'none':id;if(eq.acc2===id&&eq.acc1===id)eq.acc2='none';else if(eq.acc2===id)eq.acc2='none';}else{eq.acc2=eq.acc2===id?'none':id;if(eq.acc1===id&&eq.acc2===id)eq.acc1='none';else if(eq.acc1===id)eq.acc1='none';}refreshChar();renderPrev();updSlots();renderAccs();saveS();}
+function renderAccs(){updSlots();const g=document.getElementById('acgrid');g.innerHTML='';ACCS.forEach(ac=>{const owned=ownA.has(ac.id),in1=eq.acc1===ac.id,in2=eq.acc2===ac.id,can=stars>=ac.p;const card=document.createElement('div');let cls='accard';if(in1)cls+=' s1';else if(in2)cls+=' s2';else if(owned)cls+=' owned';else if(!can)cls+=' lk';card.className=cls;card.innerHTML=`<span class="acicon">${ac.ic}</span><div>${ac.n}</div>`;if(in1)card.innerHTML+=`<div><span class="sbadge s1">Slot 1</span></div>`;else if(in2)card.innerHTML+=`<div><span class="sbadge s2">Slot 2</span></div>`;else if(!owned&&ac.p>0)card.innerHTML+=`<div class="acp">⭐${ac.p}</div>`;card.onclick=()=>{if(!owned){if(can&&ac.id!=='none'){stars-=ac.p;ownA.add(ac.id);equipAcc(ac.id);wallets();saveS();}return;}equipAcc(ac.id);};g.appendChild(card);});}
+
+// ══ WALLETS ════════════════════════════════════════════════════════
+function wallets(){for(let i=0;i<=8;i++){const e=document.getElementById('w'+i);if(e)e.textContent=stars;}}
+</script>
+<script>
+// ══ QUIZ DATA ══════════════════════════════════════════════════════
+const QB={math:{easy:[{q:'2+3?',a:'5',o:['4','5','6','7']},{q:'10-4?',a:'6',o:['5','6','7','8']},{q:'Sides of a triangle?',a:'3',o:['2','3','4','5']},{q:'5×2?',a:'10',o:['8','9','10','12']},{q:'Half of 8?',a:'4',o:['2','3','4','5']},{q:'Number after 19?',a:'20',o:['18','20','21','22']},{q:'3+7?',a:'10',o:['9','10','11','13']},{q:'Days in a week?',a:'7',o:['5','6','7','8']},{q:'4×3?',a:'12',o:['10','11','12','14']},{q:'15-6?',a:'9',o:['7','8','9','10']}],medium:[{q:'7×8?',a:'56',o:['48','56','64','54']},{q:'144÷12?',a:'12',o:['11','12','13','14']},{q:'25% of 200?',a:'50',o:['25','40','50','75']},{q:'x+5=12, x=?',a:'7',o:['5','6','7','8']},{q:'½+¼=?',a:'¾',o:['½','⅔','¾','1']},{q:'√64?',a:'8',o:['6','7','8','9']},{q:'3³?',a:'27',o:['9','18','27','36']},{q:'Next prime after 11?',a:'13',o:['12','13','15','17']},{q:'60°+80°+?=180°',a:'40°',o:['30°','40°','50°','60°']},{q:'15²?',a:'225',o:['125','175','200','225']}],hard:[{q:'3x-7=14, x=?',a:'7',o:['5','6','7','9']},{q:'Circle r=5, area (π≈3.14)?',a:'78.5',o:['31.4','78.5','15.7','25']},{q:'2⁸?',a:'256',o:['128','256','512','64']},{q:'Simplify 18/24',a:'¾',o:['⅔','¾','⅘','½']},{q:'Mean of 4,8,6,10,2?',a:'6',o:['5','6','7','8']},{q:'20% of x=50, x=?',a:'250',o:['100','200','250','500']},{q:'a=3,b=4, c=?',a:'5',o:['6','5','7','8']},{q:'-3×-4?',a:'12',o:['-12','-7','12','7']},{q:'Expand 2(x+5)',a:'2x+10',o:['2x+5','x+10','2x+10','2x+7']},{q:'0.75 as fraction?',a:'¾',o:['⅔','¾','⅘','½']}],expert:[{q:'x²-5x+6=0, x=?',a:'2',o:['1','2','4','6']},{q:'log₂(64)?',a:'6',o:['4','5','6','8']},{q:'d/dx(3x²+2x)?',a:'6x+2',o:['3x+2','6x+2','6x²+2','3x²+2']},{q:'sin(30°)?',a:'0.5',o:['0.25','0.5','0.75','1']},{q:'∑n, n=1→10?',a:'55',o:['45','50','55','60']},{q:'i²?',a:'-1',o:['1','-1','i','-i']},{q:'f(x)=x³, f\'=?',a:'3x²',o:['x²','3x²','3x³','x³']},{q:'det([[2,3],[1,4]])?',a:'5',o:['5','8','11','14']},{q:'(1+x)³ x² coeff?',a:'3',o:['1','2','3','6']},{q:'∫2x dx?',a:'x²+C',o:['2x²+C','x²+C','x+C','2+C']}]},
+spelling:{easy:[{q:'Spell: home animal',h:'P-3',a:'pet',sp:1},{q:'Spell: opposite of big',h:'S-5',a:'small',sp:1},{q:'Spell: morning meal',h:'B-9',a:'breakfast',sp:1},{q:'Spell: wet weather',h:'R-4',a:'rain',sp:1},{q:'Spell: who teaches',h:'T-7',a:'teacher',sp:1},{q:'Spell: what we breathe',h:'A-3',a:'air',sp:1},{q:'Spell: very tidy',h:'N-4',a:'neat',sp:1},{q:'Spell: run fast',h:'D-4',a:'dash',sp:1},{q:'Spell: feeling happy',h:'G-4',a:'glad',sp:1},{q:'Spell: when tired',h:'S-5',a:'sleep',sp:1}],medium:[{q:'Spell: very large',h:'E-8',a:'enormous',sp:1},{q:'Spell: very happy',h:'E-6',a:'elated',sp:1},{q:'Spell: study of living things',h:'B-7',a:'biology',sp:1},{q:'Spell: feeling worried',h:'A-7',a:'anxious',sp:1},{q:'Spell: person who writes',h:'A-6',a:'author',sp:1},{q:'Spell: believable',h:'C-8',a:'credible',sp:1},{q:'Spell: not ancient',h:'M-6',a:'modern',sp:1},{q:'Spell: studies stars',h:'A-10',a:'astronomer',sp:1},{q:'Spell: make bigger',h:'E-7',a:'enlarge',sp:1},{q:'Spell: study through objects',h:'A-11',a:'archaeology',sp:1}],hard:[{q:'Spell: strong hatred',h:'A-11',a:'abhorrence',sp:1},{q:'Spell: make clearer',h:'E-9',a:'elucidate',sp:1},{q:'Spell: inclined to doubt',h:'S-9',a:'sceptical',sp:1},{q:'Spell: study of universe',h:'C-8',a:'cosmology',sp:1},{q:'Spell: happening at same time',h:'S-14',a:'simultaneously',sp:1},{q:'Spell: impossible to avoid',h:'U-11',a:'unavoidable',sp:1},{q:'Spell: put off doing',h:'P-13',a:'procrastinate',sp:1},{q:'Spell: very careful',h:'M-10',a:'meticulous',sp:1},{q:'Spell: not taking sides',h:'I-9',a:'impartial',sp:1},{q:'Spell: nations agreement',h:'T-6',a:'treaty',sp:1}],expert:[{q:'Spell: excessive praise',h:'A-9',a:'adulation',sp:1},{q:'Spell: impossible to understand',h:'I-16',a:'incomprehensible',sp:1},{q:'Spell: observation-based',h:'E-9',a:'empirical',sp:1},{q:'Spell: word origins',h:'E-9',a:'etymology',sp:1},{q:'Spell: overly pedantic',h:'P-8',a:'pedantic',sp:1},{q:'Spell: brief/fleeting',h:'E-9',a:'ephemeral',sp:1},{q:'Spell: showing off',h:'O-12',a:'ostentatious',sp:1},{q:'Spell: impossible to doubt',h:'I-16',a:'incontrovertible',sp:1},{q:'Spell: sudden insight',h:'E-9',a:'epiphany',sp:1},{q:'Spell: using unclear language',h:'E-12',a:'equivocation',sp:1}]},
+science:{easy:[{q:'Plants need from sun?',a:'Sunlight',o:['Water','Sunlight','Soil','Air']},{q:'Fish breathe with?',a:'Gills',o:['Lungs','Gills','Skin','Nose']},{q:'Hottest planet?',a:'Venus',o:['Mercury','Mars','Venus','Jupiter']},{q:'Caterpillars become?',a:'Butterflies',o:['Moths','Butterflies','Beetles','Dragonflies']},{q:'Frozen water is?',a:'Solid',o:['Gas','Liquid','Solid','Plasma']},{q:'Baby dogs?',a:'Puppies',o:['Kittens','Cubs','Puppies','Chicks']},{q:'Biggest land animal?',a:'Elephant',o:['Giraffe','Hippo','Elephant','Rhino']},{q:'Trees produce?',a:'Oxygen',o:['CO₂','Oxygen','Nitrogen','Steam']},{q:'Insect legs?',a:'6',o:['4','6','8','10']},{q:'Ears sense?',a:'Hearing',o:['Sight','Taste','Smell','Hearing']}],medium:[{q:'Gas plants absorb?',a:'Carbon dioxide',o:['Oxygen','Nitrogen','Carbon dioxide','Hydrogen']},{q:'Powerhouse of cell?',a:'Mitochondria',o:['Nucleus','Mitochondria','Ribosome','Vacuole']},{q:'Closest to Sun?',a:'Mercury',o:['Venus','Earth','Mars','Mercury']},{q:'Water symbol?',a:'H₂O',o:['HO','H₂O','H₂O₂','OH']},{q:'Human bones?',a:'206',o:['196','206','216','226']},{q:'Gravity keeps us on?',a:'Ground',o:['Magnetism','Friction','Ground','Inertia']},{q:'Rock from lava?',a:'Igneous',o:['Sedimentary','Metamorphic','Igneous','Fossil']},{q:'Produces insulin?',a:'Pancreas',o:['Liver','Kidney','Pancreas','Stomach']},{q:'Most common gas in air?',a:'Nitrogen',o:['Oxygen','CO₂','Nitrogen','Argon']},{q:'Speed of light?',a:'300,000 km/s',o:['3,000','30,000','300,000','3,000,000']}],hard:[{q:'Plants make food by?',a:'Photosynthesis',o:['Respiration','Osmosis','Photosynthesis','Digestion']},{q:'Carbon atomic number?',a:'6',o:['4','6','8','12']},{q:'Sharing electrons?',a:'Covalent bond',o:['Ionic','Covalent bond','Metallic','Hydrogen']},{q:'Newton 2nd law?',a:'F=ma',o:['F=mv','F=ma','E=mc²','P=mv']},{q:'Neutral pH?',a:'7',o:['0','5','7','14']},{q:'Genetic info?',a:'DNA',o:['RNA','DNA','ATP','mRNA']},{q:'C-14 half-life?',a:'5,730 years',o:['1,000','5,730 years','10,000','50,000']},{q:'Proton charge?',a:'Positive',o:['Negative','Neutral','Positive','Variable']},{q:"Ohm's law?",a:'V=IR',o:['V=IP','V=IR','P=VI²','I=VR']},{q:'Produces proteins?',a:'Ribosome',o:['Golgi','Ribosome','Lysosome','Vacuole']}],expert:[{q:'Electron spin quantum number?',a:'ms',o:['n','l','ml','ms']},{q:'Heisenberg uncertainty?',a:'Position & momentum imprecise',o:['Energy conserved','Position & momentum imprecise','Light constant','Electrons orbit']},{q:'CRISPR for?',a:'Gene editing',o:['Protein synthesis','Gene editing','Cell division','Drug delivery']},{q:'Strong nuclear force binds?',a:'Quarks',o:['Electrons','Atoms','Quarks','Molecules']},{q:'Gibbs free energy?',a:'G=H-TS',o:['G=H+TS','G=H-TS','G=T-HS','G=S-HT']},{q:'Dark matter %?',a:'~27%',o:['~5%','~27%','~68%','~99%']},{q:'DNA→mRNA?',a:'Transcription',o:['Translation','Transcription','Replication','Transduction']},{q:'Entropy formula?',a:'ΔS=Q/T',o:['ΔS=T/Q','ΔS=Q/T','ΔS=QT','ΔS=H-G']},{q:'EM force carrier?',a:'Photon',o:['Gluon','W boson','Photon','Graviton']},{q:'Black hole boundary?',a:'Event horizon',o:['Singularity','Event horizon','Schwarzschild','Photon sphere']}]},
+history:{easy:[{q:'First on Moon?',a:'Neil Armstrong',o:['Buzz Aldrin','Neil Armstrong','Yuri Gagarin','John Glenn']},{q:'Columbus sailed from?',a:'Spain',o:['Portugal','England','France','Spain']},{q:'Pilgrims sailed on?',a:'Mayflower',o:['Titanic','Mayflower','Santa Maria','Endeavour']},{q:'City with Colosseum?',a:'Rome',o:['Athens','Rome','Cairo','London']},{q:'MLK fought for?',a:'Equal rights',o:["Women's vote",'Equal rights','Workers','Independence']},{q:'Vikings from?',a:'Scandinavia',o:['Germany','Britain','Scandinavia','Russia']},{q:'Famous pharaoh?',a:'Cleopatra',o:['Roman empress','Cleopatra','Greek goddess','Nubian queen']},{q:'US North/South war?',a:'Civil War',o:['Revolution','Civil War','WW1','Cold War']},{q:'Invented lightbulb?',a:'Thomas Edison',o:['Newton','Einstein','Thomas Edison','Tesla']},{q:'Columbus reached America?',a:'1492',o:['1392','1492','1592','1692']}],medium:[{q:'WW2 ended?',a:'1945',o:['1942','1943','1944','1945']},{q:'First US President?',a:'George Washington',o:['Lincoln','Jefferson','George Washington','Adams']},{q:'Ancient wonder in Egypt?',a:'Great Pyramid',o:['Colosseum','Great Pyramid','Parthenon','Stonehenge']},{q:'Titanic sank?',a:'1912',o:['1905','1908','1912','1918']},{q:'Invented telephone?',a:'Alexander Bell',o:['Edison','Tesla','Alexander Bell','Marconi']},{q:'Moon landing?',a:'1969',o:['1965','1967','1969','1972']},{q:'Wrote Romeo & Juliet?',a:'Shakespeare',o:['Dickens','Shakespeare','Austen','Homer']},{q:'First female Nobel?',a:'Marie Curie',o:['Nightingale','Parks','Marie Curie','Earhart']},{q:'Wall split Berlin?',a:'Berlin Wall',o:['Great Wall','Iron Curtain','Berlin Wall',"Hadrian's"]},{q:'Built Colosseum?',a:'Roman Empire',o:['Greek','Ottoman','Roman Empire','Egyptian']}],hard:[{q:'Treaty ending WW1?',a:'Treaty of Versailles',o:['Paris','Treaty of Versailles','Utrecht','Westphalia']},{q:'First Chinese Emperor?',a:'Qin Shi Huang',o:['Kublai Khan','Han Wudi','Qin Shi Huang','Tang Taizong']},{q:'Russian Revolution?',a:'1917',o:['1905','1912','1917','1921']},{q:'1929 Depression cause?',a:'Stock market crash',o:['WW1','Stock market crash','Drought','Banks']},{q:'Largest empire?',a:'Mongol Empire',o:['Roman','British','Mongol Empire','Russian']},{q:'Main WW1 trigger?',a:'Assassination of Franz Ferdinand',o:['Poland invasion','Assassination of Franz Ferdinand','Lusitania','Versailles']},{q:'Soviet WW2 leader?',a:'Stalin',o:['Lenin','Trotsky','Stalin','Khrushchev']},{q:'Berlin Wall fell?',a:'1989',o:['1985','1987','1989','1991']},{q:'Apartheid was?',a:'Racial segregation in South Africa',o:['French gov','Racial segregation in South Africa','Asia war','Economic']},{q:'Communist Manifesto?',a:'Marx and Engels',o:['Lenin','Trotsky','Marx and Engels','Stalin']}],expert:[{q:'Sykes-Picot?',a:'Middle East division UK/France',o:['Alliance','Middle East division UK/France','Crimea peace','Trade']},{q:'Meiji Restoration?',a:"Japan's modernisation 1868",o:['Chinese dynasty',"Japan's modernisation 1868",'Korean revolution','Indian independence']},{q:'Keynesian economics?',a:'Gov spending to stimulate',o:['Free market','Gov spending to stimulate','Trickle-down','Monetarism']},{q:'Congress of Vienna 1815?',a:'Redrew Europe after Napoleon',o:['Ended WW1','Redrew Europe after Napoleon','Created UN','Divided Germany']},{q:'Scramble for Africa?',a:'European colonisation 1880s–1914',o:['Independence','European colonisation 1880s–1914','Internal','Trade']},{q:'Marshall Plan?',a:'US aid to rebuild Europe',o:['Military','US aid to rebuild Europe','Soviet','NATO']},{q:'Toussaint Louverture?',a:'Haitian Revolution leader',o:['Cuba','Haitian Revolution leader','Brazil emperor','Mexico']},{q:'Truman Doctrine?',a:'Contain Soviet communism',o:['Nuclear','Contain Soviet communism','Recovery','Asia']},{q:'Thermopylae?',a:'Spartans delayed Persians',o:['Rome defeated Greece','Spartans delayed Persians','Alexander conquered','Athens defeated Sparta']},{q:'Rome fell due to?',a:'Invasions, decline, instability',o:['One battle','Invasions, decline, instability','Prosperity','Religion']}]},
+geography:{easy:[{q:'Largest ocean?',a:'Pacific',o:['Atlantic','Indian','Arctic','Pacific']},{q:'Egypt is in?',a:'Africa',o:['Asia','Europe','Africa','S.America']},{q:'Eiffel Tower?',a:'France',o:['Italy','Spain','France','Germany']},{q:'Capital of England?',a:'London',o:['Manchester','London','Birmingham','Leeds']},{q:'Longest river?',a:'The Nile',o:['Amazon','Mississippi','Yangtze','The Nile']},{q:'Continents?',a:'7',o:['5','6','7','8']},{q:'Amazon mainly in?',a:'Brazil',o:['Peru','Colombia','Brazil','Venezuela']},{q:'Tallest mountain?',a:'Mount Everest',o:['K2','Mont Blanc','Kilimanjaro','Mount Everest']},{q:'Maple leaf flag?',a:'Canada',o:['USA','Australia','Canada','NZ']},{q:'Australia is in?',a:'Oceania',o:['Asia','Africa','Oceania','S.America']}],medium:[{q:'Capital of Australia?',a:'Canberra',o:['Sydney','Melbourne','Canberra','Brisbane']},{q:'Most natural lakes?',a:'Canada',o:['Russia','USA','Canada','Brazil']},{q:'Capital of Japan?',a:'Tokyo',o:['Osaka','Kyoto','Hiroshima','Tokyo']},{q:'Largest desert?',a:'Antarctic Desert',o:['Sahara','Gobi','Arabian','Antarctic Desert']},{q:'Capital of Brazil?',a:'Brasília',o:['Rio','São Paulo','Brasília','Salvador']},{q:'Country=continent?',a:'Australia',o:['Greenland','Antarctica','Australia','Iceland']},{q:'Capital of Russia?',a:'Moscow',o:['St Petersburg','Kiev','Moscow','Minsk']},{q:'Most populated?',a:'India',o:['China','USA','India','Indonesia']},{q:'Europe–Asia range?',a:'Ural Mountains',o:['Alps','Himalayas','Ural Mountains','Caucasus']},{q:'Smallest country?',a:'Vatican City',o:['Monaco','San Marino','Liechtenstein','Vatican City']}],hard:[{q:'Deepest lake?',a:'Lake Baikal',o:['Caspian','Superior','Lake Baikal','Tanganyika']},{q:'Coriolis effect?',a:"Earth's rotation deflects wind",o:['Sea levels',"Earth's rotation deflects wind",'Tides','Magnetic']},{q:'Himalayas plates?',a:'Indian & Eurasian',o:['African','Pacific','Indian & Eurasian','Arabian']},{q:'Freshwater %?',a:'~3%',o:['~1%','~3%','~10%','~25%']},{q:'Rain shadow?',a:'Dry leeward side',o:['Heavy rain','Dry leeward side','Cloud pattern','Flood']},{q:'Ring of Fire?',a:'Pacific volcanoes',o:['Desert ring','Pacific volcanoes','Mountain range','Ocean current']},{q:'Most densely populated?',a:'Monaco',o:['Singapore','Bangladesh','Monaco','Bahrain']},{q:'Mariana Trench?',a:'Western Pacific',o:['Atlantic','Indian','Western Pacific','Arctic']},{q:'Air mass boundary?',a:'A front',o:['Tropopause','Isotherm','A front','Isobar']},{q:'Köppen classifies?',a:'Climate types',o:['Rainfall','Climate types','Soil','Altitude']}],expert:[{q:'Isostasy?',a:'Crust-mantle equilibrium',o:['Glaciers','Crust-mantle equilibrium','Salinity','Pressure']},{q:'Demographic transition?',a:'Birth/death rates change as societies develop',o:['Migration','Birth/death rates change as societies develop','Trade','Urbanisation']},{q:'El Niño cause?',a:'Pacific warming',o:['Arctic melt','Pacific warming','Solar','Monsoon']},{q:'Rostow model?',a:'5 stages of development',o:['Trade','5 stages of development','Population','Resources']},{q:'Heartland Theory?',a:'Control Central Asia → world island',o:['Ocean power','Control Central Asia → world island','Economic wealth','Islands']},{q:'HDI measures?',a:'Life, education, income',o:['GDP only','Life, education, income','Pop/GDP','Military']},{q:'Transnational migration?',a:'Ties to multiple countries',o:['Moving once','Ties to multiple countries','Seasonal','Refugees']},{q:'Permafrost thaw cause?',a:'Climate change',o:['Volcanic','Climate change','Ocean only','Deforestation']},{q:'Primate city?',a:'Disproportionately largest city',o:['First city','Disproportionately largest city','Capital','Biodiversity']},{q:'Subaltern geography?',a:'Marginalised voices',o:['Mountains','Marginalised voices','Underground','Water']}]},
+reading:{easy:[{q:'"Setting" of a story?',a:'Where & when it happens',o:['Main character','What happens','Where & when it happens','The problem']},{q:'A "character"?',a:'Person or animal in story',o:['Type of book','Person or animal in story','A place','A problem']},{q:'"Fiction"?',a:'Made-up story',o:['True story','Made-up story','Short story','Poem']},{q:'A "noun"?',a:'Person, place or thing',o:['Action word','Describing word','Person, place or thing','Joining word']},{q:'"Non-fiction"?',a:'True, real facts',o:['Made-up','True, real facts','Fantasy','Poems']},{q:'"Plot"?',a:'What happens',o:['Setting','Character','What happens','Ending']},{q:'"Author"?',a:'Person who wrote it',o:['Illustrator','Reader','Person who wrote it','Character']},{q:'To "predict"?',a:'Guess what happens next',o:['Read backwards','Guess what happens next','Find character','Describe setting']},{q:'"Title"?',a:'Name of book',o:['Last chapter','Name of book','Character name','Setting']},{q:'A "rhyme"?',a:'Same ending sound',o:['Same meaning','Opposites','Same ending sound','Long words']}],medium:[{q:'"Benevolent"?',a:'Kind and generous',o:['Angry','Kind and generous','Sad','Clever']},{q:'Protagonist?',a:'Main character',o:['Villain','Narrator','Main character','Setting']},{q:'"Wind whispered" is?',a:'Personification',o:['Simile','Metaphor','Alliteration','Personification']},{q:'Antonym?',a:'Opposite meaning',o:['Same meaning','Poem','Opposite meaning','Figure of speech']},{q:'Synonym for happy?',a:'Joyful',o:['Sad','Angry','Joyful','Tired']},{q:'To "infer"?',a:'Conclude from evidence',o:['State directly','Conclude from evidence','Describe','Question']},{q:'Conclusion paragraph?',a:'Summarise and wrap up',o:['Introduce','New ideas','Summarise and wrap up','List facts']},{q:'"Theme"?',a:'Central message',o:['Main char','Central message','Setting','Events']},{q:'Context clues help?',a:'Understand unknown words',o:['Find author','Understand unknown words','Syllables','Summarise']},{q:'Figurative language?',a:'Language for effect',o:['Exact facts','Language for effect','Numbers','Old words']}],hard:[{q:'"Dramatic irony"?',a:'Audience knows what char doesn\'t',o:['Char lies','Audience knows what char doesn\'t','Two disagree','Sad ending']},{q:'"Unreliable narrator"?',a:'Account may not be trustworthy',o:['Talks too much','Account may not be trustworthy','First person','Lying']},{q:'Simile vs metaphor?',a:'Simile uses like/as',o:['Same','Simile longer','Simile uses like/as','Metaphors in poetry']},{q:'"Stream of consciousness"?',a:'Shows thoughts directly',o:['About water','Shows thoughts directly','Poem type','Dialogue style']},{q:'"Foil" character?',a:'Contrasts protagonist',o:['Confuse reader','Be villain','Contrasts protagonist','Comic relief']},{q:'"Pathetic fallacy"?',a:"Weather reflects character's mood",o:['False argument',"Weather reflects character's mood",'Sad ending','Emotional dialogue']},{q:"Freytag's Pyramid?",a:'Exposition, rising, climax, falling, resolution',o:['Begin,mid,end','Intro,body,conclusion','Exposition, rising, climax, falling, resolution','Problem,solution']},{q:'"In medias res"?',a:'Beginning mid-action',o:['Surprise ending','Beginning mid-action','Switching narrators','Backwards']},{q:'"Bathos"?',a:'Serious to trivial shift',o:['Sadness','Build tension','Serious to trivial shift','Rhyme scheme']},{q:'"Bildungsroman"?',a:'Coming-of-age story',o:['German fairy tale','Coming-of-age story','Political allegory','Tragedy']}],expert:[{q:'Post-colonial theory?',a:'Through colonialism lens',o:['Dating texts','Through colonialism lens','Narrative structure','Historical genre']},{q:'Intertextuality?',a:'References between texts',o:['Between lines','References between texts','Internal logic','Backwards']},{q:'Diegesis vs mimesis?',a:'Telling vs showing',o:['Same','Diegesis=showing','Telling vs showing','Poetry only']},{q:"Bakhtin's heteroglossia?",a:'Diversity of voices',o:['Foreign language','Diversity of voices','Inconsistent narrator','Multiple plots']},{q:'Defamiliarisation?',a:'Making familiar seem strange',o:['No metaphors','Making familiar seem strange','Foreign settings','Unusual fonts']},{q:'Free indirect discourse?',a:'Blend narrator and character voice',o:['No quotes','Blend narrator and character voice','Monologue','Omniscient']},{q:'Marxist lit criticism?',a:'Class, power, ideology',o:['Hidden politics','Class, power, ideology','Capitalism critics','Historical']},{q:'Aporia?',a:'Irresolvable contradiction',o:['Conclusion','Irresolvable contradiction','Climax','Figurative lang']},{q:'Hermeneutic circle?',a:'Whole through parts',o:['Circular plot','Whole through parts','Cyclical','Symbol']},{q:'Signifier vs signified?',a:'Form vs concept',o:['Same','Form vs concept','Signifier=meaning','Visual only']}]},
+grammar:{easy:[{q:'Which is a noun?',a:'Dog',o:['Run','Happy','Dog','Quickly']},{q:'Which is a verb?',a:'Jump',o:['Tall','Jump','Red','Slowly']},{q:'Correct capitals?',a:'My name is Alex.',o:['my name is alex.','My name is alex.','My Name Is Alex.','My name is Alex.']},{q:'Sentence ends with?',a:'Punctuation mark',o:['Comma','Capital','Punctuation mark','Noun']},{q:'Which is a question?',a:'What time is it?',o:['I like cats.','What time is it?','She is tall.','Go away.']},{q:'Which is an adjective?',a:'Fluffy',o:['Run','Fluffy','Eat','Quickly']},{q:'Plural of "cat"?',a:'Cats',o:['Cates','Cats','Catz','Caties']},{q:'Shows action?',a:'Swim',o:['Swim','Blue','Large','Happy']},{q:'Correct sentence?',a:'I have two cats.',o:['I have to cats.','I have too cats.','I have two cats.','I have tow cats.']},{q:'Words in "The cat sat on the mat"?',a:'6',o:['4','5','6','7']}],medium:[{q:'Correct sentence?',a:'She and I went to the store.',o:['Me and her went.','She and I went to the store.','Her and me went.','I and she went.']},{q:'"Quickly" is?',a:'Adverb',o:['Noun','Verb','Adjective','Adverb']},{q:'Correct punctuation?',a:"It's a beautiful day.",o:["Its a beautiful day.","It's a beautiful day.","Its' a beautiful day.","Its a beautiful day"]},{q:'Plural of "child"?',a:'Children',o:['Childs','Childes','Children','Childrens']},{q:'"Happiness" noun type?',a:'Abstract noun',o:['Proper','Concrete','Abstract noun','Collective']},{q:'Which is a conjunction?',a:'Because',o:['Quickly','Beautiful','Because','Running']},{q:'Comparative of "good"?',a:'Better',o:['Gooder','More good','Goodest','Better']},{q:'Passive voice?',a:'The cake was eaten by the dog.',o:['Dog ate.','Dog was eating.','The cake was eaten by the dog.','Dog eats.']},{q:'Exclamatory ends with?',a:'! (exclamation mark)',o:['Full stop','Comma','? (question mark)','! (exclamation mark)']},{q:'Correct tense?',a:'She had already left when I arrived.',o:['She left when I arrive.','She has left when I arrived.','She had already left when I arrived.','She had leave.']}],hard:[{q:'"Subordinate clause"?',a:'Cannot stand alone',o:['Main clause','Cannot stand alone','Any clause','And-clause']},{q:'Correct subjunctive?',a:'If I were you, I would reconsider.',o:['If I was you...','If I were you, I would reconsider.','If I am you...','If I be you...']},{q:'"Dangling modifier"?',a:'Modifier not relating to intended word',o:['Verb no object','Modifier not relating to intended word','Adj after noun','Misplaced adverb']},{q:'Non-restrictive clause?',a:'My sister, who lives in Paris, is a chef.',o:['The girl who won.','My sister, who lives in Paris, is a chef.','The book I read.','The uphill path.']},{q:'"Parallelism"?',a:'Same form for list items',o:['Repeating words','Same form for list items','Two sentences','Synonyms']},{q:'A "gerund"?',a:'Verb -ing as noun',o:['Past tense','Verb -ing as noun','Adjective form','Modal verb']},{q:'Correct semicolon?',a:'I was tired; I went to bed.',o:['I was tired, I went.','I was tired; I went to bed.','I was tired; but I went.','I; was tired.']},{q:'"Appositive phrase"?',a:'Noun phrase renaming prior noun',o:['Verb as noun','Noun phrase renaming prior noun','Adverbial','Comparative']},{q:'"Zero conditional"?',a:'Universal truths: if+present',o:['Hypothetical past','Universal truths: if+present','Impossible future','Regret past']},{q:'Correct agreement?',a:'Neither the teacher nor the students were ready.',o:['...students was.','Neither the teacher nor the students were ready.','...student were.','...student are.']}],expert:[{q:'"Deixis"?',a:'Words whose meaning depends on context',o:['Sentence structure','Words whose meaning depends on context','Metaphor type','Sounds']},{q:'Prescriptive vs descriptive?',a:'Rules vs actual use',o:['Same','Rules vs actual use','Spoken vs written','Descriptive=formal']},{q:'Grammatical "aspect"?',a:'Complete or ongoing action',o:['When action','Complete or ongoing action','Verb mood','Subject']},{q:'"Pragmatics"?',a:'Context shapes meaning',o:['Sounds','Syntax','Context shapes meaning','Word history']},{q:'"Cleft sentence"?',a:'Split to emphasise',o:['Missing subject','Split to emphasise','Run-on','No main verb']},{q:'"Cohesion"?',a:'Devices making text cohere',o:['Agreement','Devices making text cohere','Central argument','Logic']},{q:'Sapir-Whorf?',a:'Language influences thought',o:['Universal grammar','Language influences thought','Instinctive','Written first']},{q:'"Ellipsis"?',a:'Omit words understood from context',o:['Add words','Omit words understood from context','Long sentences','Pronoun']},{q:'"Cataphora"?',a:'Forward reference',o:['Back reference','Forward reference','Verb replacement','Noun clause']},{q:'"Register"?',a:'Language varies by social context',o:['Pitch','Language varies by social context','Grammar rule','Pace']}]},
+logic:{easy:[{q:'Different: 🐶🐱🐭🍎🐰',a:'🍎',o:['🐶','🐱','🍎','🐰']},{q:'Next: 1,2,3,4,__',a:'5',o:['4','5','6','7']},{q:'All cats have tails. Whiskers is cat. Has tail?',a:'Yes',o:['Yes','No','Maybe','Unknown']},{q:'Next: 🔴🔵🔴🔵🔴__',a:'🔵',o:['🔴','🔵','🟡','🟢']},{q:'Tom>Sam>Ben. Shortest?',a:'Ben',o:['Tom','Sam','Ben','Same']},{q:'5 apples, give 2. Left?',a:'3',o:['2','3','4','5']},{q:'Next: 2,4,6,8,__',a:'10',o:['9','10','11','12']},{q:'Only red or blue. Not red?',a:'Blue',o:['Green','Blue','Yellow','Pink']},{q:'4 equal sides?',a:'Square',o:['Triangle','Circle','Rectangle','Square']},{q:'Monday → tomorrow?',a:'Tuesday',o:['Sunday','Monday','Tuesday','Wednesday']}],medium:[{q:'All dogs bark. Rex is dog. Rex__',a:'Barks',o:['Meows','Barks','Cannot bark','Sometimes']},{q:'Next: 3,6,12,24,__',a:'48',o:['36','42','48','50']},{q:'Some birds fly. All penguins fly?',a:'No — some ≠ all',o:['Yes','No — some ≠ all','Only summer','Not birds']},{q:'A>B>C>D. Tallest?',a:'A',o:['A','B','C','D']},{q:'Missing: 2,5,8,__,14',a:'11',o:['9','10','11','12']},{q:'Rain→wet ground. Rained?',a:'Not necessarily',o:['Yes','Not necessarily','No','Only clouds']},{q:'Odd one out: Cow,sheep,carrot,pig',a:'Carrot',o:['Cow','Sheep','Carrot','Pig']},{q:'All squares are rectangles. Vice versa?',a:'No',o:['Yes','No','Sometimes','Only if equal']},{q:'1,1,2,3,5,8,__',a:'13',o:['10','12','13','15']},{q:'John>Mary>Sue>Tim. Youngest?',a:'Tim',o:['John','Mary','Sue','Tim']}],hard:[{q:'All A→B, All B→C. Therefore?',a:'All A are C',o:['All C→A','All A are C','No A→C','Some A→C']},{q:'"No cats are dogs. Some pets are cats."',a:'Some pets are not dogs',o:['All pets are cats','Some pets are not dogs','No pets are dogs','All dogs are pets']},{q:'Clock 3:15. Angle?',a:'7.5°',o:['0°','7.5°','45°','90°']},{q:'1,4,9,16,25,__',a:'36',o:['30','35','36','49']},{q:'P→Q, Q→R. Valid?',a:'P→R',o:['R→P','P→R','Q→P','R→Q']},{q:'"Can\'t trust John (rude)" is?',a:'Ad hominem',o:['Straw man','Ad hominem','False dichotomy','Slippery slope']},{q:'"With us or against us" is?',a:'False dichotomy',o:['Ad hominem','Hasty gen','False dichotomy','Circular']},{q:'Contrapositive of P→Q?',a:'¬Q→¬P',o:['Q→P','¬P→¬Q','¬Q→¬P','P→¬Q']},{q:'Modus tollens: P→Q, ¬Q?',a:'¬P',o:['P true','¬P','Q true','P→R']},{q:'23 people share birthday?',a:'~50%',o:['6%','25%','~50%','90%']}],expert:[{q:'Modus ponens?',a:'P→Q and P, therefore Q',o:['Q→P','P→Q and P, therefore Q','¬P→¬Q','P↔Q']},{q:'Tautology?',a:'Always true',o:['Always false','Always true','Circular','Unknown']},{q:"Gambler's fallacy?",a:'"Tails 5x, heads is due"',o:['Coin biased','"Tails 5x, heads is due"','Coins random','Last tails']},{q:"Gödel's incompleteness?",a:'Consistent systems have unprovable truths',o:['All provable','Consistent systems have unprovable truths','Logic solves all','Maths inconsistent']},{q:'Ship of Theseus?',a:'Identity when all parts replaced',o:['Why ships sail','Identity when all parts replaced','Nature of time','Observation changes']},{q:"Russell's Paradox?",a:'Set containing itself → contradiction',o:['Sets finite','Set containing itself → contradiction','Empty sets','All contain selves']},{q:'Reductio ad absurdum?',a:'Negation leads to contradiction',o:['Reducing terms','Negation leads to contradiction','Extreme conclusions','Circular']},{q:'Abductive reasoning?',a:'Most likely explanation',o:['General→specific','Specific→general','Most likely explanation','Disprove all']},{q:"Liar's Paradox?",a:'Self-reference = undecidable',o:['All false','Self-reference = undecidable','Logic answers','Language precise']},{q:'"Necessary and sufficient"?',a:'A↔B',o:['A→B only','A↔B','Unrelated','A always true']}]}};
+
+// ══ QUIZ ENGINE ════════════════════════════════════════════════════
+var curSubj='',qs=[],qi=0,qsc=0,qans=false;
+const SM={math:{l:'Math',c:'#ad1457',pr:'#f06292',bg:'#fff0f5'},spelling:{l:'Spelling',c:'#283593',pr:'#7986cb',bg:'#f0f4ff'},science:{l:'Science',c:'#1b5e20',pr:'#66bb6a',bg:'#f0fff4'},history:{l:'History',c:'#bf360c',pr:'#ffa726',bg:'#fff8f0'},geography:{l:'Geography',c:'#01579b',pr:'#29b6f6',bg:'#f0faff'},reading:{l:'Reading',c:'#4a148c',pr:'#ba68c8',bg:'#fdf0ff'},grammar:{l:'Grammar',c:'#33691e',pr:'#aed581',bg:'#fffff0'},logic:{l:'Logic',c:'#6a1b9a',pr:'#ce93d8',bg:'#f3e5f5'}};
+function getQs(s){const b=band();return QB[s]?.[b]||QB[s]?.medium||[];}
+function goQuiz(s){curSubj=s;const pool=[...getQs(s)];for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}qs=pool.slice(0,10);qi=0;qsc=0;qans=false;const m=SM[s];document.getElementById('qtitle').textContent=`${m.l} ${{easy:'🌱',medium:'🌿',hard:'📘',expert:'🎓'}[band()]}`;document.getElementById('qtitle').style.color=m.c;document.getElementById('pf').style.background=m.pr;document.getElementById('spill').textContent='0/0';showTab('quiz');renderQ();}
+function retryQ(){goQuiz(curSubj);}
+function renderQ(){if(qi>=qs.length){endQuiz();return;}qans=false;const q=qs[qi];document.getElementById('pf').style.width=Math.round(qi/qs.length*100)+'%';document.getElementById('qbox').style.background=SM[curSubj]?.bg||'#f9f9f9';document.getElementById('qtext').textContent=q.q;document.getElementById('hint').textContent=q.h?'Hint: '+q.h:'Question '+(qi+1)+' of '+qs.length;document.getElementById('fb').className='fbbar';document.getElementById('nxtbtn').style.display='none';const area=document.getElementById('oarea');area.innerHTML='';if(q.sp){const inp=document.createElement('input');inp.className='sinp';inp.type='text';inp.placeholder='Type your answer...';inp.onkeydown=e=>{if(e.key==='Enter'&&!qans)checkSpell(inp,q.a);};area.appendChild(inp);const btn=document.createElement('button');btn.className='subbtn';btn.style.background=SM[curSubj]?.c||'#ff6b9d';btn.textContent='Check ✓';btn.onclick=()=>{if(!qans)checkSpell(inp,q.a);};area.appendChild(btn);setTimeout(()=>inp.focus(),80);}else{const g=document.createElement('div');g.className='ogrid';const cls=curSubj==='logic'?['lo','lo','lo','lo']:['oa','ob','oc','od'];(q.o||[]).forEach((opt,i)=>{const btn=document.createElement('button');btn.className='opt '+cls[i];btn.textContent=opt;btn.onclick=()=>pickOpt(btn,opt,q.a);g.appendChild(btn);});area.appendChild(g);}}
+function pickOpt(btn,chosen,correct){if(qans)return;qans=true;const ok=chosen===correct;document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===correct)b.className='opt ok';else if(b===btn&&!ok)b.className='opt bad';});done(ok,correct);}
+function checkSpell(inp,correct){if(qans)return;qans=true;const ok=inp.value.trim().toLowerCase()===correct.toLowerCase();inp.disabled=true;const s=inp.nextElementSibling;if(s)s.disabled=true;inp.className='sinp '+(ok?'ok':'bad');if(!ok)inp.value=correct;done(ok,correct);}
+function done(ok,correct){const fb=document.getElementById('fb');if(ok){qsc++;stars++;fb.textContent='✅ Correct! +1 ⭐';fb.className='fbbar show ok';}else{fb.textContent='❌ Answer: '+correct;fb.className='fbbar show bad';}document.getElementById('spill').textContent=qsc+'/'+(qi+1);document.getElementById('nxtbtn').style.display='block';wallets();saveS();}
+function nextQ(){qi++;if(qi>=qs.length)endQuiz();else renderQ();}
+function endQuiz(){const t=qs.length,p=Math.round(qsc/t*100);let st='⭐',tt='Good try!';if(p===100){st='🏆';tt='Perfect score!';}else if(p>=80){st='🌟';tt='Brilliant!';}else if(p>=60){st='😊';tt='Well done!';}else if(p>=40){st='📚';tt='Keep practising!';}document.getElementById('rstar').textContent=st;document.getElementById('rttl').textContent=tt;document.getElementById('rscore').textContent=qsc;document.getElementById('rtotal').textContent=t;document.getElementById('rearned').textContent='+'+qsc+' ⭐ earned!';showTab('result');saveS();}
+
+// ══ STUDY ══════════════════════════════════════════════════════════
+const SS=[{id:'math',n:'Math',ic:'➕',c:'#ad1457',bg:'#fff0f5',d:'Numbers, algebra & geometry'},{id:'science',n:'Science',ic:'🔬',c:'#1b5e20',bg:'#f0fff4',d:'Physics, chemistry & biology'},{id:'history',n:'History',ic:'🏛️',c:'#bf360c',bg:'#fff8f0',d:'Empires, wars & discoveries'},{id:'geography',n:'Geography',ic:'🌍',c:'#01579b',bg:'#f0faff',d:'Countries, climate & maps'},{id:'reading',n:'Reading & Lit',ic:'📖',c:'#4a148c',bg:'#fdf0ff',d:'Stories, analysis & devices'},{id:'grammar',n:'Grammar',ic:'✏️',c:'#33691e',bg:'#fffff0',d:'Language, syntax & writing'},{id:'logic',n:'Logic',ic:'🧩',c:'#6a1b9a',bg:'#f3e5f5',d:'Reasoning & critical thinking'},{id:'spelling',n:'Spelling & Vocab',ic:'🔤',c:'#283593',bg:'#f0f4ff',d:'Words, meanings & etymology'}];
+const ST={math:{easy:[{ic:'🔢',n:'Counting & Place Value',d:'Ones, tens, hundreds'},{ic:'➕',n:'Addition & Subtraction',d:'Adding and taking away'},{ic:'✖️',n:'Multiplication Tables',d:'Times tables 2–12'},{ic:'🔷',n:'2D Shapes',d:'Triangles, squares, circles'},{ic:'⏰',n:'Telling Time',d:'Reading clocks'},{ic:'💰',n:'Basic Money',d:'Coins and making change'}],medium:[{ic:'½',n:'Fractions',d:'Halves, thirds, equivalents'},{ic:'%',n:'Percentages & Decimals',d:'Converting and calculating'},{ic:'📐',n:'Area & Perimeter',d:'Measuring shapes'},{ic:'🔣',n:'Intro to Algebra',d:'Variables and equations'},{ic:'📊',n:'Data & Graphs',d:'Charts and averages'},{ic:'⭕',n:'Circles & Pi',d:'Radius, diameter, circumference'}],hard:[{ic:'📈',n:'Linear Equations',d:'Solving and graphing'},{ic:'△',n:"Pythagoras' Theorem",d:'Right triangles and distance'},{ic:'📉',n:'Statistics & Probability',d:'Mean, median, mode, chance'},{ic:'🔁',n:'Simultaneous Equations',d:'Two equations at once'},{ic:'🌀',n:'Quadratic Equations',d:'Parabolas and the formula'},{ic:'🧮',n:'Trigonometry Basics',d:'Sin, cos, tan'}],expert:[{ic:'∫',n:'Differentiation',d:'Derivatives and rates of change'},{ic:'∑',n:'Integration',d:'Antiderivatives and areas'},{ic:'📦',n:'Matrices',d:'Matrix operations'},{ic:'🌐',n:'Complex Numbers',d:'Imaginary numbers'},{ic:'🔢',n:'Sequences & Series',d:'Arithmetic, geometric'},{ic:'🎲',n:'Advanced Probability',d:'Conditional and distributions'}]},science:{easy:[{ic:'🌱',n:'Plants & Photosynthesis',d:'How plants make food'},{ic:'🐾',n:'Animals & Habitats',d:'Where animals live'},{ic:'🌡️',n:'States of Matter',d:'Solids, liquids and gases'},{ic:'☀️',n:'The Solar System',d:'Planets, moons and Sun'},{ic:'💧',n:'The Water Cycle',d:'Rain, evaporation, clouds'},{ic:'🧲',n:'Magnets & Forces',d:'Pushing, pulling, attraction'}],medium:[{ic:'🔬',n:'Cells — Building Blocks',d:'Animal and plant cell parts'},{ic:'⚗️',n:'Acids & Alkalis',d:'pH scale and neutralisation'},{ic:'⚡',n:'Electricity & Circuits',d:'Current, voltage, resistance'},{ic:'🧬',n:'Genetics Basics',d:'DNA, chromosomes, inheritance'},{ic:'🌋',n:'The Rock Cycle',d:'Igneous, sedimentary, metamorphic'},{ic:'🌡️',n:'Heat & Energy Transfer',d:'Conduction, convection, radiation'}],hard:[{ic:'⚛️',n:'Atomic Structure',d:'Protons, neutrons, electrons'},{ic:'🔗',n:'Chemical Bonding',d:'Ionic, covalent, metallic'},{ic:'⚡',n:'Waves & EM Spectrum',d:'Transverse and EM waves'},{ic:'🧪',n:'Organic Chemistry',d:'Hydrocarbons and reactions'},{ic:'🫁',n:'Respiration',d:'Aerobic, anaerobic, the system'},{ic:'🌍',n:'Climate Science',d:'Greenhouse effect and evidence'}],expert:[{ic:'🌌',n:'Quantum Mechanics',d:'Wave-particle duality'},{ic:'🧬',n:'Molecular Biology',d:'DNA replication and translation'},{ic:'⚡',n:'Electromagnetism',d:"Maxwell's equations"},{ic:'♻️',n:'Thermodynamics',d:'Laws, entropy, Gibbs'},{ic:'🌑',n:'Nuclear Physics',d:'Decay, fission, fusion'},{ic:'🔭',n:'Cosmology',d:'Big Bang, dark matter, black holes'}]},history:{easy:[{ic:'🏺',n:'Ancient Egypt',d:'Pharaohs and pyramids'},{ic:'⚔️',n:'Ancient Greece',d:'City-states and democracy'},{ic:'🏟️',n:'The Roman Empire',d:'Caesar and gladiators'},{ic:'🚀',n:'Space Race',d:'Moon landing and Cold War'},{ic:'🗽',n:'American Independence',d:'Revolution and Founding Fathers'},{ic:'🌍',n:'World War II',d:'Causes, events, aftermath'}],medium:[{ic:'⚔️',n:'Medieval Period',d:'Knights, feudalism, crusades'},{ic:'🧭',n:'Age of Exploration',d:'Columbus and the New World'},{ic:'⚙️',n:'Industrial Revolution',d:'Factories, steam, social change'},{ic:'🌹',n:'French Revolution',d:'Causes, events, Napoleon'},{ic:'🕊️',n:'World War I',d:'Causes, trenches, treaties'},{ic:'✊',n:'Civil Rights Movement',d:'MLK, Rosa Parks, equality'}],hard:[{ic:'💥',n:'Causes of WW1',d:'Alliance systems and nationalism'},{ic:'☭',n:'Russian Revolution',d:'Lenin, Bolsheviks, USSR'},{ic:'🌍',n:'Decolonisation',d:'Independence movements worldwide'},{ic:'🧊',n:'The Cold War',d:'Superpowers and proxy wars'},{ic:'✡️',n:'The Holocaust',d:'Nazi ideology and legacy'},{ic:'🤝',n:'Treaty of Versailles',d:'Terms and consequences'}],expert:[{ic:'🗺️',n:'Imperialism & Colonialism',d:'European empires and resistance'},{ic:'💼',n:'The Great Depression',d:'Stock crash and New Deal'},{ic:'⚖️',n:'Historiography',d:'How historians work'},{ic:'🌐',n:'Post-War World Order',d:'UN, NATO, Marshall Plan'},{ic:'⚔️',n:'Fall of Rome',d:'Military and political causes'},{ic:'🧠',n:'20th Century Ideologies',d:'Fascism, communism, democracy'}]},geography:{easy:[{ic:'🗺️',n:'Continents & Oceans',d:'7 continents and 5 oceans'},{ic:'🏔️',n:'Mountains & Rivers',d:'How mountains form'},{ic:'🌦️',n:'Weather & Climate',d:'Sun, rain, wind'},{ic:'🌍',n:'Countries & Capitals',d:'Famous countries and capitals'},{ic:'🏙️',n:'Urban & Rural',d:'Cities and villages'},{ic:'🌊',n:'Seas & Coastlines',d:'Beaches, cliffs, tides'}],medium:[{ic:'🌋',n:'Tectonic Plates',d:'Earthquakes and volcanoes'},{ic:'🌊',n:'Water Cycle & Rivers',d:'Drainage basins, source to sea'},{ic:'🌲',n:'Biomes & Ecosystems',d:'Rainforest, desert, tundra'},{ic:'👥',n:'Population Geography',d:'Distribution, density, migration'},{ic:'🌦️',n:'Climate Zones',d:'Tropical, polar, temperate, arid'},{ic:'🏭',n:'Economic Geography',d:'Trade, industry, development'}],hard:[{ic:'♻️',n:'Climate Change',d:'Causes, evidence, solutions'},{ic:'💧',n:'Water Insecurity',d:'Water stress and management'},{ic:'🏙️',n:'Urbanisation',d:'Megacities and sustainability'},{ic:'🌊',n:'Coastal Processes',d:'Erosion and longshore drift'},{ic:'🌍',n:'Development & Inequality',d:'HDI, Rostow, fair trade'},{ic:'🔥',n:'Natural Hazards',d:'Risk and disaster management'}],expert:[{ic:'🌐',n:'Globalisation',d:'Trade networks and TNCs'},{ic:'🌡️',n:'Global Climate Models',d:'Feedback loops and tipping points'},{ic:'💰',n:'Geopolitics & Resources',d:'Oil, water, food security'},{ic:'👥',n:'Migration Theory',d:'Push/pull and transnationalism'},{ic:'🗺️',n:'Superpowers',d:'Definitions, growth, soft power'},{ic:'🏭',n:'Deindustrialisation',d:'Rust belts and regeneration'}]},reading:{easy:[{ic:'📖',n:'Story Structure',d:'Beginning, middle, end'},{ic:'🎭',n:'Characters',d:'Protagonists and traits'},{ic:'🗺️',n:'Setting',d:'Time, place and atmosphere'},{ic:'💬',n:'Dialogue',d:'How characters speak'},{ic:'🔍',n:'Comprehension Skills',d:'Main ideas and inference'},{ic:'📚',n:'Fiction vs Non-Fiction',d:'Features of each'}],medium:[{ic:'🖼️',n:'Figurative Language',d:'Simile, metaphor, personification'},{ic:'🎭',n:'Narrative Perspective',d:'First, second, third person'},{ic:'😄',n:'Tone & Mood',d:'Feelings through word choice'},{ic:'🔑',n:'Theme & Message',d:'Central themes and intent'},{ic:'📜',n:'Poetry Techniques',d:'Rhyme, rhythm, structure'},{ic:'📰',n:'Non-Fiction Text Types',d:'Reports, arguments, instructions'}],hard:[{ic:'🎭',n:'Dramatic Irony',d:'Authors use irony for effect'},{ic:'⚔️',n:'Conflict in Literature',d:'Types and how they drive plot'},{ic:'🌑',n:'Gothic Literature',d:'Features and atmosphere'},{ic:'💡',n:'Symbolism & Imagery',d:'Objects and motifs as meaning'},{ic:'🏗️',n:'Narrative Structure',d:"Freytag's pyramid, non-linear"},{ic:'✍️',n:"Writer's Craft",d:'Deliberate language choices'}],expert:[{ic:'🌍',n:'Post-Colonial Literature',d:'Power, identity, voice'},{ic:'🔗',n:'Intertextuality',d:'How texts reference each other'},{ic:'🧠',n:'Reader Response Theory',d:'How readers construct meaning'},{ic:'⚖️',n:'Marxist Literary Criticism',d:'Class, power, ideology'},{ic:'🔬',n:'Feminist Literary Theory',d:'Gender, voice, representation'},{ic:'💬',n:'Narrative Theory',d:'Diegesis, heteroglossia'}]},grammar:{easy:[{ic:'🔤',n:'Parts of Speech',d:'Nouns, verbs, adjectives, adverbs'},{ic:'.',n:'Punctuation Basics',d:'Full stops, commas, questions'},{ic:'📝',n:'Sentence Types',d:'Statements, questions, commands'},{ic:'🔗',n:'Conjunctions',d:'And, but, because, although'},{ic:'🖊️',n:'Nouns & Pronouns',d:'Names and replacement words'},{ic:'📖',n:'Simple Tenses',d:'Present, past and future'}],medium:[{ic:'⏳',n:'Verb Tenses',d:'Simple, continuous, perfect'},{ic:'🔀',n:'Active vs Passive Voice',d:'Who does the action'},{ic:'🧩',n:'Clauses & Phrases',d:'Main and subordinate clauses'},{ic:'📎',n:'Relative Clauses',d:'Restrictive and non-restrictive'},{ic:'🗣️',n:'Direct & Reported Speech',d:'Quoting and converting'},{ic:'🔢',n:'Determiners & Articles',d:'A, an, the, some, any'}],hard:[{ic:'🎭',n:'Subjunctive Mood',d:'If I were, formal subjunctive'},{ic:'🔄',n:'Conditional Sentences',d:'Zero, first, second, third'},{ic:'📌',n:'Participle Phrases',d:'Present and past participles'},{ic:'🧱',n:'Sentence Structure',d:'Parallelism and variety'},{ic:'🎯',n:'Cohesive Devices',d:'Reference and connectors'},{ic:'🌐',n:'Register & Style',d:'Formal, informal, academic'}],expert:[{ic:'🔬',n:'Syntax & Grammar',d:'Deep structure and movement'},{ic:'💬',n:'Pragmatics & Discourse',d:'Speech acts and implicature'},{ic:'🌍',n:'Sociolinguistics',d:'Dialect and code-switching'},{ic:'📖',n:'Historical Linguistics',d:'Language change and families'},{ic:'🧠',n:'Cognitive Linguistics',d:'Conceptual metaphor and frames'},{ic:'⚖️',n:'Prescriptive vs Descriptive',d:'Rules vs actual usage'}]},logic:{easy:[{ic:'🔍',n:"Spot the Odd One Out",d:"Finding what doesn't belong"},{ic:'🔢',n:'Number Patterns',d:'Counting sequences'},{ic:'🔀',n:'Simple If-Then Thinking',d:'Basic logical connections'},{ic:'📏',n:'Ordering & Comparing',d:'Biggest, smallest, tallest'},{ic:'🔴',n:'Colour & Shape Patterns',d:'Repeating patterns'},{ic:'🗓️',n:'Days, Months & Time',d:'Before, after, sequences'}],medium:[{ic:'🧩',n:'Syllogisms',d:'All A are B, B is C...'},{ic:'🔄',n:'Number Sequences',d:'Arithmetic and geometric'},{ic:'⚖️',n:'Deductive Reasoning',d:'Certain conclusions from facts'},{ic:'🚫',n:'Logical Fallacies',d:'Ad hominem, straw man'},{ic:'🗺️',n:'Spatial Reasoning',d:'Rotations, reflections, 3D'},{ic:'🎭',n:'Analogies',d:'A is to B as C is to...'}],hard:[{ic:'➡️',n:'Formal Logic',d:'P→Q, contrapositive, modus ponens'},{ic:'⚖️',n:'Fallacies in Depth',d:'Recognising flawed arguments'},{ic:'🔢',n:'Set Theory Basics',d:'Union, intersection, Venn diagrams'},{ic:'🎲',n:'Probability & Logic',d:'Combining probability and reasoning'},{ic:'🔍',n:'Critical Thinking',d:'Evidence, bias, assumptions'},{ic:'🗣️',n:'Argument Structure',d:'Premises, conclusions, validity'}],expert:[{ic:'∀',n:'Predicate Logic',d:'Quantifiers and formal proofs'},{ic:'♾️',n:"Gödel & Incompleteness",d:'Limits of formal systems'},{ic:'🔄',n:'Paradoxes',d:"Liar's, Russell's, Ship of Theseus"},{ic:'🧮',n:'Boolean Algebra',d:'Logic gates and truth tables'},{ic:'🌐',n:'Game Theory',d:"Prisoner's dilemma, Nash"},{ic:'💭',n:'Philosophy of Logic',d:'Epistemology and a priori'}]},spelling:{easy:[{ic:'🔤',n:'Common Sight Words',d:'High-frequency words'},{ic:'🔊',n:'Phonics & Blending',d:'Sounds and letter combinations'},{ic:'👨‍👩‍👧',n:'Family & Home Words',d:'Everyday vocabulary'},{ic:'🌈',n:'Colours & Describing Words',d:'Adjectives'},{ic:'🔢',n:'Number Words',d:'Spelling one through a hundred'},{ic:'🕐',n:'Time & Calendar Words',d:'Days, months, time'}],medium:[{ic:'🎓',n:'Prefixes & Suffixes',d:'Un-, re-, -tion, -ness'},{ic:'🔄',n:'Homophones & Confusables',d:"There/their/they're"},{ic:'📚',n:'Academic Vocabulary',d:'School subject words'},{ic:'🌍',n:'Latin & Greek Roots',d:'Where English words come from'},{ic:'✏️',n:'Spelling Rules',d:'I before E, doubling consonants'},{ic:'💬',n:'Synonyms & Antonyms',d:'Similar and opposite meanings'}],hard:[{ic:'📖',n:'Advanced Word Families',d:'Root words and derivatives'},{ic:'🌐',n:'Etymology',d:'Origins and history of words'},{ic:'🎭',n:'Literary Vocabulary',d:'Words for analysing texts'},{ic:'🔬',n:'Scientific Terminology',d:'Technical science words'},{ic:'⚖️',n:'Formal & Academic Vocab',d:'Words for essays and reports'},{ic:'🗺️',n:'Foreign Words in English',d:"Borrowed words: cliché, déjà vu"}],expert:[{ic:'🏛️',n:'Classical Roots in Depth',d:'Greek and Latin origins'},{ic:'📜',n:'History of English',d:'Old English, Middle English'},{ic:'🎓',n:'University-Level Vocab',d:'Epistemological, circumlocution'},{ic:'📝',n:'Word Formation',d:'Compounding, derivation, blending'},{ic:'🌍',n:'Dialects & Varieties',d:'American, British, Australian'},{ic:'🔬',n:'Corpus Linguistics',d:'Studying language patterns'}]}};
+var curSSubj=null,curSTopic=null,qaHist=[],lessonCtx='';
+function buildSSGrid(){const g=document.getElementById('ssgrid');g.innerHTML='';SS.forEach(s=>{const c=document.createElement('div');c.className='sscard';c.style.background=s.bg;c.innerHTML=`<span class="ssicon">${s.ic}</span><span class="ssname" style="color:${s.c}">${s.n}</span><span class="ssdesc" style="color:${s.c}">${s.d}</span>`;c.onclick=()=>openSSubj(s.id);g.appendChild(c);});}
+function openSSubj(id){curSSubj=id;const s=SS.find(x=>x.id===id),b=band(),ts=ST[id]?.[b]||ST[id]?.medium||[];document.getElementById('sv-subj').style.display='none';document.getElementById('sv-topic').style.display='block';document.getElementById('sv-lesson').style.display='none';const lbl=document.getElementById('slbl');lbl.textContent=`${s.ic} ${s.n}`;lbl.style.color=s.c;const g=document.getElementById('tgrid');g.innerHTML='';const bc={easy:'#1b5e20',medium:'#e65100',hard:'#ad1457',expert:'#4a148c'}[b];const bbg={easy:'#e8f5e9',medium:'#fff8e1',hard:'#fce4ec',expert:'#f3e5f5'}[b];const bl={easy:'🌱 Easy',medium:'🌿 Medium',hard:'📘 Hard',expert:'🎓 Expert'}[b];ts.forEach(t=>{const c=document.createElement('div');c.className='tcard';c.innerHTML=`<span class="ticon">${t.ic}</span><div class="tinfo"><div class="tname">${t.n}</div><div class="tdesc">${t.d}</div><span class="tlvl" style="background:${bbg};color:${bc}">${bl}</span></div><span style="color:#ddd;font-size:1.1rem">›</span>`;c.onclick=()=>openSLesson(t);g.appendChild(c);});}
+function studyBack(to){if(to==='subj'){document.getElementById('sv-subj').style.display='block';document.getElementById('sv-topic').style.display='none';document.getElementById('sv-lesson').style.display='none';}else{document.getElementById('sv-topic').style.display='block';document.getElementById('sv-lesson').style.display='none';}}
+async function openSLesson(topic){curSTopic=topic;qaHist=[];lessonCtx='';document.getElementById('sv-topic').style.display='none';document.getElementById('sv-lesson').style.display='block';document.getElementById('sloading').style.display='block';document.getElementById('slessoncontent').style.display='none';document.getElementById('qabox').innerHTML='';const s=SS.find(x=>x.id===curSSubj);const pill=document.getElementById('tpill');pill.textContent=`${topic.ic} ${topic.n}`;pill.style.background=s.bg;pill.style.color=s.c;const icons=['🤔','💭','📚','✍️','💡','🎓'];let ix=0;const iEl=document.getElementById('sicon');const tmr=setInterval(()=>{ix=(ix+1)%icons.length;iEl.textContent=icons[ix];},600);document.getElementById('ssub').innerHTML=`Preparing <strong>${topic.n}</strong> for Grade ${G||'?'}...`;await _doLesson(tmr);}
+async function reloadLesson(){document.getElementById('sloading').style.display='block';document.getElementById('slessoncontent').style.display='none';document.getElementById('qabox').innerHTML='';qaHist=[];const icons=['🤔','💭','📚','✍️','💡','🎓'];let ix=0;const iEl=document.getElementById('sicon');const tmr=setInterval(()=>{ix=(ix+1)%icons.length;iEl.textContent=icons[ix];},600);await _doLesson(tmr);}
+async function _doLesson(tmr){const t=curSTopic,b=band(),g=G||6,s=SS.find(x=>x.id===curSSubj);const age={easy:'a 5-8 year old (Grade 1-3)',medium:'a 9-12 year old (Grade 4-6)',hard:'a 12-15 year old (Grade 7-9)',expert:'a 15-18 year old (Grade 10-12)'}[b];const prompt=`You are an enthusiastic, friendly AI tutor. Create a clear, engaging lesson on "${t.n}" for ${age} (Grade ${g}) studying ${s.n}.\n\nWrite using EXACTLY this HTML structure:\n- <h2> for main section titles (2-3 sections)\n- <h3> for subsections\n- <p> for paragraphs\n- <ul><li> for bullet points\n- <strong> for key terms\n- <div class="fact-box">💡 <strong>Fun fact:</strong> ...</div>\n- <div class="example-box">📝 <strong>Example:</strong> ...</div>\n- <div class="warning-box">⚠️ <strong>Watch out:</strong> ...</div>\n\nRequirements: age-appropriate for Grade ${g}, 3-5 sections with real substance, at least 2 example/fact boxes, end with Quick Check section with 2 thinking questions. Return ONLY HTML. No markdown, no backticks.`;try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});const d=await r.json();let html=d.content[0].text.trim().replace(/```html\n?/g,'').replace(/```\n?/g,'').trim();lessonCtx=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();clearInterval(tmr);document.getElementById('sloading').style.display='none';document.getElementById('slessoncontent').style.display='block';document.getElementById('shtml').innerHTML=html;addQAMsg('a',`Hi! I just taught you about <strong>${t.n}</strong>. Ask me anything — I can explain more, give extra examples, or quiz you! 😊`);}catch(e){clearInterval(tmr);document.getElementById('sloading').style.display='none';document.getElementById('slessoncontent').style.display='block';document.getElementById('shtml').innerHTML='<p style="color:#c62828">⚠️ Could not load lesson. Check internet and try again.</p>';}}
+function addQAMsg(role,text){const box=document.getElementById('qabox');const d=document.createElement('div');d.className='qam '+role;d.innerHTML=text;box.appendChild(d);box.scrollTop=box.scrollHeight;}
+async function sendQA(){const inp=document.getElementById('qainp');const q=inp.value.trim();if(!q)return;const btn=document.getElementById('qasend');inp.value='';btn.disabled=true;addQAMsg('u',q);const t=document.createElement('div');t.className='qam t';t.textContent='Thinking...';document.getElementById('qabox').appendChild(t);document.getElementById('qabox').scrollTop=99999;const g=G||6,tp=curSTopic,s=SS.find(x=>x.id===curSSubj);const msgs=[{role:'user',content:`You are a friendly AI tutor for a Grade ${g} student learning "${tp?.n}" in ${s?.n}. Lesson context:\n\n${lessonCtx.slice(0,1500)}\n\nAnswer clearly at Grade ${g} level. Be encouraging. 2-4 sentences unless more needed. Start directly.`},{role:'assistant',content:`I'll help this Grade ${g} student understand ${tp?.n}!`},...qaHist,{role:'user',content:q}];try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:msgs})});const d=await r.json();const ans=d.content[0].text.trim();t.remove();addQAMsg('a',ans);qaHist.push({role:'user',content:q},{role:'assistant',content:ans});if(qaHist.length>14)qaHist=qaHist.slice(-14);}catch(e){t.remove();addQAMsg('a','⚠️ Could not connect. Try again!');}btn.disabled=false;inp.focus();}
+function startStudyQuiz(){if(curSSubj)goQuiz(curSSubj);}
+
+// ══ LIFE GAMES ═════════════════════════════════════════════════════
+var curLG='',scenes=[],scIdx=0,rep=0,lgSt=0,scAns=false;
+const GT=[{id:'integrity',l:'A Day of Integrity',ic:'🤝',c:'#1b5e20',bg:'#e8f5e9',tag:'Integrity — doing what\'s right',d:'Small moments test your character.'},{id:'bravery',l:'A Week of Bravery',ic:'🦁',c:'#880e4f',bg:'#fce4ec',tag:'Bravery — feel the fear and do it anyway',d:'Moments that demand courage.'},{id:'hardwork',l:'The Big Project',ic:'💪',c:'#0d47a1',bg:'#e3f2fd',tag:'Hard Work — effort always pays off',d:'A huge challenge awaits.'},{id:'neverquit',l:'The Mountain Race',ic:'🌟',c:'#4a148c',bg:'#f3e5f5',tag:'Never Give Up — keep going no matter what',d:'8 weeks of training and race day.'}];
+async function genStory(id){const t=GT.find(g=>g.id===id),g=G||6,b=band();const age={easy:'a 5-8 year old',medium:'a 9-12 year old',hard:'a 12-15 year old',expert:'a 15-18 year old'}[b];const p=`Write a unique 8-scene life story for a cute ${eq.animal} character teaching "${t.tag}". For ${age} (Grade ${g}). Return ONLY valid JSON:\n{"title":"...","lesson":"...","scenes":[{"location":"emoji Place — time","narration":"2-3 sentences.","moment":"1-2 sentence dilemma.","choices":[{"text":"A","outcome":"good","good":true,"rep":2,"title":"Short","msg":"2-3 sentences."},{"text":"B","outcome":"neutral","good":false,"rep":0,"title":"Short","msg":"2-3 sentences."},{"text":"C","outcome":"bad","good":false,"rep":-1,"title":"Short","msg":"2-3 sentences."}]}]}\nExactly 8 scenes. Mixed locations. Age-appropriate. Unique.`;const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:p}]})});const d=await r.json();return JSON.parse(d.content[0].text.trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}
+async function startLife(id){curLG=id;const t=GT.find(g=>g.id===id);document.getElementById('lv-sel').style.display='none';document.getElementById('lv-load').style.display='block';document.getElementById('lv-play').style.display='none';document.getElementById('alsub').textContent=`Writing a Grade ${G} "${t.l}" story...`;try{launchStory(id,await genStory(id));}catch(e){document.getElementById('alsub').textContent='⚠️ Could not generate. Check internet.';}}
+async function newStory(){document.getElementById('lv-end').style.display='none';document.getElementById('scard').style.display='none';document.getElementById('lv-play').style.display='none';document.getElementById('lv-load').style.display='block';document.getElementById('alsub').textContent='Writing a brand new story...';try{launchStory(curLG,await genStory(curLG));}catch(e){document.getElementById('alsub').textContent='⚠️ Could not generate. Try again!';}}
+function launchStory(id,story){const t=GT.find(g=>g.id===id);scenes=story.scenes||[];scIdx=0;rep=0;lgSt=0;scAns=false;document.getElementById('lv-load').style.display='none';document.getElementById('lv-play').style.display='block';document.getElementById('lv-end').style.display='none';document.getElementById('scard').style.display='block';document.getElementById('lnxt').style.display='none';const tag=document.getElementById('lvtag');tag.textContent=t.tag;tag.style.background=t.bg;tag.style.color=t.c;document.getElementById('lendlesson').innerHTML=`<strong>What this story teaches:</strong><br>${story.lesson||t.tag}`;renderLProg();renderScene();}
+function exitLife(){document.getElementById('lv-sel').style.display='block';document.getElementById('lv-play').style.display='none';document.getElementById('lv-load').style.display='none';}
+function renderLProg(){const bar=document.getElementById('lprog');bar.innerHTML='';scenes.forEach((_,i)=>{const d=document.createElement('div');d.className='ldot'+(i<scIdx?' done':i===scIdx?' cur':'');bar.appendChild(d);});document.getElementById('lrep').textContent='❤️ Rep: '+rep;document.getElementById('lse').textContent=lgSt;}
+function renderScene(){const sc=scenes[scIdx];if(!sc)return;scAns=false;document.getElementById('outbox').className='outbox';document.getElementById('lnxt').style.display='none';document.getElementById('sloc').textContent=sc.location||'';document.getElementById('snarr').textContent=sc.narration||'';document.getElementById('smom').textContent=sc.moment||'';const cv=document.getElementById('sill');cv.width=640;cv.height=144;drawScene(cv,sc.location||'');const ca=document.getElementById('carea');ca.innerHTML='';(sc.choices||[]).forEach((ch,i)=>{const b=document.createElement('button');b.className='cbtn';b.innerHTML=`<span style="color:#ff6b9d;margin-right:5px;font-family:'Fredoka One',cursive">${['A','B','C'][i]}.</span>${ch.text}`;b.onclick=()=>pickCh(b,ch);ca.appendChild(b);});renderLProg();}
+function drawScene(cv,loc){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.clearRect(0,0,w,h);const l=loc.toLowerCase();let st='#87CEEB',sb='#b0e0ff';if(l.includes('night')||l.includes('bed')){st='#1a1a4a';sb='#2d2d6a';}else if(l.includes('morning')){st='#ffecd2';sb='#fcb69f';}else if(l.includes('rain')){st='#546e7a';sb='#78909c';}c.fillStyle=st;c.fillRect(0,0,w,h*.6);c.fillStyle=sb;c.fillRect(0,h*.4,w,h*.2);const indoor=l.includes('class')||l.includes('school')||l.includes('library')||l.includes('gym')||l.includes('hall');let gc='#7cb342';if(indoor)gc='#8d6e63';else if(l.includes('night')||l.includes('bed'))gc='#303030';else if(l.includes('mountain')||l.includes('hill')||l.includes('trail'))gc='#6d8b3a';c.fillStyle=gc;c.fillRect(0,h*.6,w,h*.4);if(indoor){c.fillStyle='#a1887f';for(let i=0;i<8;i++)c.fillRect(i*(w/8),h*.6,w/8-2,h*.4);c.fillStyle='#1565c0';c.fillRect(w*.05,h*.04,w*.35,h*.38);c.fillStyle='rgba(255,255,255,.8)';c.font=`bold ${h*.09}px sans-serif`;c.textAlign='left';c.fillText(l.includes('library')?'Library':l.includes('gym')?'Gym':'Classroom',w*.07,h*.28);}else if(l.includes('mountain')||l.includes('hill')||l.includes('trail')||l.includes('race')){c.fillStyle='#558b2f';c.beginPath();c.moveTo(0,h*.6);c.quadraticCurveTo(w*.2,h*.08,w*.4,h*.6);c.closePath();c.fill();c.fillStyle='#689f38';c.beginPath();c.moveTo(w*.3,h*.6);c.quadraticCurveTo(w*.6,h*.04,w*.9,h*.6);c.closePath();c.fill();}else if(l.includes('home')||l.includes('bedroom')||l.includes('kitchen')||l.includes('living')){c.fillStyle='#ef9a9a';c.fillRect(w*.05,h*.04,w*.5,h*.45);c.fillStyle='#1565c0';c.fillRect(w*.08,h*.1,w*.12,h*.18);c.fillRect(w*.24,h*.1,w*.12,h*.18);}else{c.fillStyle='#388e3c';[[.1,.32],[.22,.22],[.72,.28],[.86,.24]].forEach(([x,y])=>{c.beginPath();c.moveTo(w*x,h*y);c.lineTo(w*(x-.06),h*.62);c.lineTo(w*(x+.06),h*.62);c.closePath();c.fill();});c.fillStyle='#bcaaa4';c.fillRect(w*.38,h*.6,w*.24,h*.4);if(l.includes('night')){c.fillStyle='#fff9c4';c.beginPath();c.arc(w*.85,h*.15,w*.04,0,Math.PI*2);c.fill();}else{c.fillStyle='#fff176';c.beginPath();c.arc(w*.82,h*.14,w*.06,0,Math.PI*2);c.fill();}}const cs=h*.75,cx=w*.5-cs/2,cy=h*.25;const tc=document.createElement('canvas');tc.width=cs;tc.height=cs;dFull(tc.getContext('2d'),cs);c.drawImage(tc,cx,cy,cs,cs);}
+function pickCh(btn,ch){if(scAns)return;scAns=true;document.querySelectorAll('.cbtn').forEach(b=>{b.disabled=true;if(b===btn)b.className='cbtn '+(ch.outcome||'neutral');else b.style.opacity='.4';});const ob=document.getElementById('outbox');ob.className='outbox show '+(ch.outcome||'neutral');document.getElementById('outtitle').textContent=(ch.good?'✅ ':'❌ ')+(ch.title||'');document.getElementById('outtext').textContent=ch.msg||'';rep+=(ch.rep||0);if(ch.good){lgSt++;stars++;wallets();saveS();}renderLProg();document.getElementById('lnxt').style.display='block';document.getElementById('lnxt').textContent=scIdx>=scenes.length-1?'See how your story ends →':'Continue the story →';}
+function nextScene(){scIdx++;if(scIdx>=scenes.length)endLife();else{renderScene();renderLProg();}}
+function endLife(){document.getElementById('scard').style.display='none';document.getElementById('lnxt').style.display='none';document.getElementById('lv-end').style.display='block';const t=scenes.length,p=t>0?Math.round(lgSt/t*100):0;let st='⭐',tt='Story complete!';if(p===100){st='🏆';tt='You were perfect!';}else if(p>=75){st='🌟';tt='Really well done!';}else if(p>=50){st='😊';tt='Good effort!';}else{st='📖';tt='You learned a lot!';}document.getElementById('lendstar').textContent=st;document.getElementById('lendttl').textContent=tt;document.getElementById('lendsub').innerHTML=`Made <strong>${lgSt}</strong> great choices out of <strong>${t}</strong>. Reputation: <strong>${rep>0?'+':''}${rep}</strong>`;document.getElementById('lendearned').textContent='+'+lgSt+' ⭐ earned!';}
+
+// ══ ART ════════════════════════════════════════════════════════════
+const ARTCOLS=['#111','#e53935','#e91e63','#9c27b0','#3f51b5','#2196f3','#00bcd4','#4caf50','#8bc34a','#ffeb3b','#ff9800','#ff5722','#795548','#fff','#f5f5f5','#90a4ae'];
+var artCol='#111',brushSz=10,drawing=false,lx=0,ly=0;
+function initArt(){const cv=document.getElementById('ac');cv.width=cv.parentElement.clientWidth||400;if(!cv.dataset.i){cv.dataset.i='1';const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);cv.addEventListener('mousedown',aStart);cv.addEventListener('mousemove',aMove);cv.addEventListener('mouseup',()=>drawing=false);cv.addEventListener('mouseleave',()=>drawing=false);cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];aStart({clientX:t.clientX,clientY:t.clientY});},{passive:false});cv.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];aMove({clientX:t.clientX,clientY:t.clientY});},{passive:false});cv.addEventListener('touchend',()=>drawing=false);}const pal=document.getElementById('acols');pal.innerHTML='';ARTCOLS.forEach(col=>{const d=document.createElement('div');d.className='adot'+(col===artCol?' sel':'');d.style.background=col;if(col==='#fff')d.style.border='3px solid #ddd';d.onclick=()=>{artCol=col;document.querySelectorAll('.adot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};pal.appendChild(d);});}
+function aPos(e,c){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)};}
+function aStart(e){drawing=true;const c=document.getElementById('ac'),{x,y}=aPos(e,c);lx=x;ly=y;const ctx=c.getContext('2d');ctx.fillStyle=artCol;ctx.beginPath();ctx.arc(x,y,brushSz/2,0,Math.PI*2);ctx.fill();}
+function aMove(e){if(!drawing)return;const c=document.getElementById('ac'),ctx=c.getContext('2d'),{x,y}=aPos(e,c);ctx.strokeStyle=artCol;ctx.lineWidth=brushSz;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(x,y);ctx.stroke();lx=x;ly=y;}
+function setBrush(sz,btn){brushSz=sz;document.querySelectorAll('.sz').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function clearArt(){const c=document.getElementById('ac'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}
+function fillArt(){const c=document.getElementById('ac'),ctx=c.getContext('2d');ctx.fillStyle=artCol;ctx.fillRect(0,0,c.width,c.height);}
+
+// ══ TABS & LIFE GAME INIT ══════════════════════════════════════════
+function showTab(id){
+  if(id==='setup'){document.getElementById('main').style.display='none';document.getElementById('tab-setup').classList.add('active');return;}
+  ['home','quiz','result','study','life','shop','art'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.classList.remove('active');});
+  const el=document.getElementById('tab-'+id);if(el)el.classList.add('active');
+  ['home','study','life','shop','art'].forEach(n=>{const b=document.getElementById('nav-'+n);if(b)b.classList.toggle('active',n===id||(id==='quiz'&&n==='home')||(id==='result'&&n==='home'));});
+  if(id==='shop')renderShop();
+  if(id==='art')initArt();
+  if(id==='home'){refreshChar();applyG();}
+  if(id==='study'){buildSSGrid();document.getElementById('sv-subj').style.display='block';document.getElementById('sv-topic').style.display='none';document.getElementById('sv-lesson').style.display='none';}
+  if(id==='life'){const g=document.getElementById('ggrid');g.innerHTML='';GT.forEach(t=>{const c=document.createElement('div');c.className='gcard';c.style.background=t.bg;c.innerHTML=`<span class="gicon">${t.ic}</span><div><span class="gname" style="color:${t.c}">${t.l}</span><span class="gdesc">${t.d}</span><span class="gtag" style="background:${t.bg};color:${t.c};border:1.5px solid ${t.c}">${t.tag}</span></div>`;c.onclick=()=>startLife(t.id);g.appendChild(c);});}
+  wallets();
+}
+
+// ══ INIT ═══════════════════════════════════════════════════════════
+loadS();
+buildGQ();
+if(G>0){
+  document.getElementById('tab-setup').classList.remove('active');
+  const m=document.getElementById('main');
+  m.style.display='flex';m.style.flexDirection='column';m.style.flex='1';m.style.overflow='hidden';
+  applyG();refreshChar();wallets();
+}
+// Pre-fill name input if returning
+const _ni=document.getElementById('ninp');if(_ni&&charName)_ni.value=charName;
+// Register service worker for offline support
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
