@@ -19,19 +19,50 @@ import http.server
 import socketserver
 import json
 import os
+import time
+import hmac
+import hashlib
+import base64
 import urllib.request
+import urllib.parse
 import urllib.error
 
 PORT = int(os.environ.get("PORT", "8888"))
 MODEL = "claude-sonnet-4-6"     # forced server-side, same as the Netlify function
 MAX_TOKENS_CAP = 4096
+PASS_DAYS = 60                  # mirrors netlify/functions/pass.js
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _b64url(b):
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def _pass_sign(payload, secret):
+    body = _b64url(json.dumps(payload, separators=(",", ":")).encode())
+    sig = _b64url(hmac.new(secret.encode(), body.encode(), hashlib.sha256).digest())
+    return body + "." + sig
+
+
+def _pass_verify(token, secret):
+    try:
+        body, sig = str(token).split(".")
+        expect = _b64url(hmac.new(secret.encode(), body.encode(), hashlib.sha256).digest())
+        if not hmac.compare_digest(sig, expect):
+            return None
+        pad = "=" * (-len(body) % 4)
+        return json.loads(base64.urlsafe_b64decode(body + pad).decode())
+    except Exception:
+        return None
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
-        if self.path.split("?")[0] != "/api/claude":
+        path = self.path.split("?")[0]
+        if path == "/api/pass":
+            return self._handle_pass()
+        if path != "/api/claude":
             return self._json(404, {"error": "Not found"})
 
         key = os.environ.get("ANTHROPIC_API_KEY")
@@ -86,6 +117,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _handle_pass(self):
+        secret = os.environ.get("PASS_SECRET")
+        if not secret:
+            return self._json(500, {"error": "Server not configured: set PASS_SECRET before running dev_server.py."})
+        length = int(self.headers.get("Content-Length") or 0)
+        raw = self.rfile.read(length) if length else b"{}"
+        try:
+            body = json.loads(raw or b"{}")
+        except Exception:
+            return self._json(400, {"error": "Invalid JSON body"})
+        action = body.get("action")
+        if action == "verify":
+            payload = _pass_verify(body.get("token"), secret)
+            active = bool(payload and payload.get("exp") and payload["exp"] > time.time())
+            return self._json(200, {"active": active, "exp": payload.get("exp") if payload else None})
+        if action == "redeem":
+            raw = str(body.get("code") or "").strip()
+            if not raw:
+                return self._json(400, {"ok": False, "error": "Please enter a code."})
+            exp = int(time.time()) + PASS_DAYS * 24 * 60 * 60
+            # 1) Manual code list
+            manual = [c.strip().upper() for c in (os.environ.get("VALID_CODES") or "").split(",") if c.strip()]
+            if raw.upper() in manual:
+                return self._json(200, {"ok": True, "token": _pass_sign({"exp": exp}, secret), "exp": exp})
+            # 2) Lemon Squeezy license key
+            d = {}
+            try:
+                req = urllib.request.Request(
+                    "https://api.lemonsqueezy.com/v1/licenses/validate",
+                    data=urllib.parse.urlencode({"license_key": raw}).encode(),
+                    method="POST",
+                    headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
+                )
+                with urllib.request.urlopen(req) as resp:
+                    d = json.loads(resp.read() or b"{}")
+            except urllib.error.HTTPError as e:
+                try: d = json.loads(e.read() or b"{}")
+                except Exception: d = {}
+            except Exception:
+                d = {}
+            want_store = os.environ.get("LEMONSQUEEZY_STORE_ID")
+            store_ok = (not want_store) or (str((d.get("meta") or {}).get("store_id")) == str(want_store))
+            if d.get("valid") and store_ok:
+                return self._json(200, {"ok": True, "token": _pass_sign({"exp": exp}, secret), "exp": exp})
+            return self._json(200, {"ok": False, "error": "That code isn’t valid. Check it and try again."})
+        return self._json(400, {"error": "Unknown action"})
+
     def _json(self, status, obj):
         b = json.dumps(obj).encode()
         self.send_response(status)
@@ -96,6 +174,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("", PORT), Handler) as httpd:
         print(f"Learning Pro dev server → http://localhost:{PORT}")
         if os.environ.get("ANTHROPIC_API_KEY"):

@@ -7,6 +7,12 @@
   to = "/.netlify/functions/claude"
   status = 200
 
+# 2-month pass: redeem a code / verify a pass token.
+[[redirects]]
+  from = "/api/pass"
+  to = "/.netlify/functions/pass"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
