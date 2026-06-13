@@ -1,3 +1,12 @@
+[functions]
+  directory = "netlify/functions"
+
+# Friendly URL for the Anthropic proxy function (used by the AI tutor and Life games).
+[[redirects]]
+  from = "/api/claude"
+  to = "/.netlify/functions/claude"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
